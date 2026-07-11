@@ -1,0 +1,38 @@
+<Window x:Class="KnowledgeBaseQaAgent.Desktop.AdminLoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="管理员验证"
+        Width="420"
+        Height="260"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#F4F7FB">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <TextBlock Text="管理员验证" FontSize="24" FontWeight="SemiBold" Foreground="#172033" />
+        <TextBlock Grid.Row="1"
+                   Text="请输入管理员 PIN 后进入设置和知识库管理。"
+                   TextWrapping="Wrap"
+                   Foreground="#566275"
+                   Margin="0,8,0,16" />
+        <PasswordBox x:Name="PinBox"
+                     Grid.Row="2"
+                     FontSize="24"
+                     MinHeight="52"
+                     Padding="12"
+                     PasswordChar="●"
+                     KeyDown="PinBox_KeyDown" />
+        <DockPanel Grid.Row="3" Margin="0,18,0,0">
+            <TextBlock x:Name="ErrorText" Foreground="#C2410C" VerticalAlignment="Center" />
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="取消" Padding="16,8" Margin="0,0,8,0" Click="CancelButton_Click" />
+                <Button Content="进入" Padding="18,8" Background="#2D7FF9" Foreground="White" Click="OkButton_Click" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</Window>

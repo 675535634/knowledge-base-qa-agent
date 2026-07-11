@@ -1,0 +1,505 @@
+<Window x:Class="KnowledgeBaseQaAgent.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Closing="Window_Closing"
+        Title="Knowledge Base QA Agent - 管理员控制台"
+        Icon="{Binding LogoPreviewImagePath}"
+        Height="720"
+        MinHeight="620"
+        Width="1120"
+        MinWidth="980"
+        Background="#F7F9FF">
+    <Window.Resources>
+        <LinearGradientBrush x:Key="AdminBackground" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#FBFCFF" Offset="0" />
+            <GradientStop Color="#F1F4FF" Offset="0.55" />
+            <GradientStop Color="#EEF7FF" Offset="1" />
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="AdminPrimary" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#7267FF" Offset="0" />
+            <GradientStop Color="#8FA2FF" Offset="1" />
+        </LinearGradientBrush>
+        <DataTemplate x:Key="AdminButtonTextTemplate">
+            <TextBlock Text="{Binding}"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       LineStackingStrategy="BlockLineHeight"
+                       LineHeight="18" />
+        </DataTemplate>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="MinWidth" Value="88" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Background" Value="{StaticResource AdminPrimary}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="ContentTemplate" Value="{StaticResource AdminButtonTextTemplate}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="18">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="4,0" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="#FAFBFF" />
+            <Setter Property="BorderBrush" Value="#DDE5F5" />
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="MinWidth" Value="240" />
+            <Setter Property="Background" Value="#FAFBFF" />
+            <Setter Property="BorderBrush" Value="#DDE5F5" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="18" Background="{StaticResource AdminBackground}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,14">
+            <StackPanel DockPanel.Dock="Left">
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="48" Height="48" CornerRadius="16" Background="#FFFFFF" BorderBrush="#DDE5F5" BorderThickness="1" Margin="0,0,12,0" ClipToBounds="True">
+                        <Image Source="{Binding LogoPreviewImagePath}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding AssistantName}" FontSize="24" FontWeight="SemiBold" Foreground="#1D2433" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Status}" Foreground="#697386" Margin="0,4,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="导入文档" Command="{Binding ImportDocumentsCommand}" />
+                <Button Content="语音提问" Command="{Binding VoiceAskCommand}" />
+            </StackPanel>
+        </DockPanel>
+
+        <TabControl Grid.Row="1" Background="Transparent" BorderBrush="#DDE5F5">
+            <TabItem Header="问答">
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <ListBox Grid.Row="0" ItemsSource="{Binding Conversation}" BorderThickness="0" Background="Transparent">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="White" BorderBrush="#DDE3EA" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,10">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Role}" Foreground="#2D7FF9" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding Content}" TextWrapping="Wrap" Margin="0,6,0,0" Foreground="#1D2433" />
+                                        <TextBlock Text="{Binding CitationText}" TextWrapping="Wrap" Margin="0,8,0,0" Foreground="#697386" FontSize="12" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <Grid Grid.Row="1" Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding Question, UpdateSourceTrigger=PropertyChanged}"
+                                 MinHeight="54"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto" />
+                        <Button Grid.Column="1"
+                                Content="发送"
+                                Command="{Binding AskCommand}"
+                                Margin="10,0,0,0"
+                                MinWidth="110" />
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="知识库">
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal">
+                        <Button Content="导入 PDF / DOCX / TXT / Markdown / HTML" Command="{Binding ImportDocumentsCommand}" />
+                        <Button Content="删除选中文档" Command="{Binding DeleteSelectedDocumentCommand}" Margin="10,0,0,0" />
+                        <Button Content="清空知识库" Command="{Binding ClearKnowledgeBaseCommand}" Margin="10,0,0,0" />
+                        <TextBlock Text="更换 Embedding 后请清空并重新导入文档以重建向量。"
+                                   Foreground="#697386"
+                                   VerticalAlignment="Center"
+                                   Margin="14,0,0,0" />
+                    </StackPanel>
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding Documents}"
+                              SelectedItem="{Binding SelectedDocument, Mode=TwoWay}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              Margin="0,12,0,0"
+                              HeadersVisibility="Column"
+                              SelectionMode="Single"
+                              CanUserAddRows="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="标题" Binding="{Binding Title}" Width="220" />
+                            <DataGridTextColumn Header="路径" Binding="{Binding Path}" Width="*" />
+                            <DataGridTextColumn Header="导入时间" Binding="{Binding CreatedAt}" Width="150" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="设置">
+                <ScrollViewer Margin="12">
+                    <StackPanel>
+                        <TextBlock Text="Provider 选择" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12" />
+                        <TextBlock Text="LLM 供应商" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12" />
+                        <Grid Margin="0,0,0,12">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="供应商" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <ComboBox Grid.Row="0"
+                                      Grid.Column="1"
+                                      ItemsSource="{Binding LlmProviderOptions}"
+                                      SelectedValue="{Binding LlmSelectedProviderCode, UpdateSourceTrigger=PropertyChanged}"
+                                      SelectedValuePath="Code"
+                                      DisplayMemberPath="Name"
+                                      Margin="0,0,14,10" />
+                            <TextBlock Grid.Row="0" Grid.Column="2" Text="模型" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <ComboBox Grid.Row="0"
+                                      Grid.Column="3"
+                                      ItemsSource="{Binding LlmModelOptions}"
+                                      Text="{Binding LlmSelectedModel, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEditable="True"
+                                      Margin="0,0,0,10" />
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Base URL" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Grid.Row="1"
+                                     Grid.Column="1"
+                                     Grid.ColumnSpan="3"
+                                     Text="{Binding LlmBaseUrl, UpdateSourceTrigger=PropertyChanged}"
+                                     Margin="0,0,0,10" />
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="API Key" VerticalAlignment="Center" Margin="0,0,12,0" />
+                            <TextBox Grid.Row="2"
+                                     Grid.Column="1"
+                                     Text="{Binding LlmApiKeyToSave, UpdateSourceTrigger=PropertyChanged}"
+                                     Margin="0,0,14,0" />
+                            <StackPanel Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" Orientation="Horizontal">
+                                <Button Content="获取模型" Command="{Binding RefreshLlmModelsCommand}" MinWidth="96" />
+                                <Button Content="保存供应商" Command="{Binding SaveLlmProviderCommand}" MinWidth="110" />
+                                <TextBlock Text="{Binding LlmModelStatus}" Foreground="#697386" VerticalAlignment="Center" Margin="8,0,0,0" TextWrapping="Wrap" MaxWidth="360" />
+                            </StackPanel>
+                            <CheckBox Grid.Row="3"
+                                      Grid.Column="1"
+                                      Grid.ColumnSpan="3"
+                                      Content="启用思考模式（仅支持混合思考模型时生效）"
+                                      IsChecked="{Binding LlmEnableThinking, UpdateSourceTrigger=PropertyChanged}"
+                                      Margin="0,10,0,0" />
+                        </Grid>
+                        <TextBlock Text="检索与语音" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,12" />
+                        <Grid Margin="0,0,0,12">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="72" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Embedding" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding EmbeddingProviders}" SelectedValue="{Binding SelectedEmbeddingProviderId}" SelectedValuePath="ProviderId" DisplayMemberPath="DisplayName" Margin="0,0,18,10" />
+                            <TextBlock Grid.Row="0" Grid.Column="2" Text="模型" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <ComboBox Grid.Row="0" Grid.Column="3" ItemsSource="{Binding EmbeddingModelOptions}" SelectedItem="{Binding EmbeddingModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Text="{Binding EmbeddingModel, UpdateSourceTrigger=PropertyChanged}" IsEditable="True" Margin="0,0,0,10" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="ASR" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding SpeechRecognizerProviders}" SelectedValue="{Binding SelectedSpeechRecognizerId}" SelectedValuePath="ProviderId" DisplayMemberPath="DisplayName" Margin="0,0,18,10" />
+                            <TextBlock Grid.Row="1" Grid.Column="2" Text="模型" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <DockPanel Grid.Row="1" Grid.Column="3" Margin="0,0,0,10">
+                                <Button Content="选择音频测试"
+                                        Command="{Binding TestAsrAudioCommand}"
+                                        MinWidth="118"
+                                        Margin="10,0,0,0"
+                                        DockPanel.Dock="Right" />
+                                <ComboBox ItemsSource="{Binding AsrModelOptions}"
+                                          SelectedItem="{Binding AsrModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          Text="{Binding AsrModel, UpdateSourceTrigger=PropertyChanged}"
+                                          IsEditable="True" />
+                            </DockPanel>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="TTS" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding SpeechSynthesizerProviders}" SelectedValue="{Binding SelectedSpeechSynthesizerId}" SelectedValuePath="ProviderId" DisplayMemberPath="DisplayName" Margin="0,0,18,10" />
+                            <TextBlock Grid.Row="2" Grid.Column="2" Text="模型" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <ComboBox Grid.Row="2" Grid.Column="3" ItemsSource="{Binding TtsModelOptions}" SelectedItem="{Binding TtsModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Text="{Binding TtsModel, UpdateSourceTrigger=PropertyChanged}" IsEditable="True" Margin="0,0,0,10" />
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Voice" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding TtsVoice, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,18,10" />
+                            <TextBlock Grid.Row="3" Grid.Column="2" Text="空间 ID" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Grid.Row="3" Grid.Column="3" Text="{Binding TtsWorkspaceId, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="语速" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <DockPanel Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" Margin="0,0,0,10">
+                                <TextBox Text="{Binding TtsSpeed, UpdateSourceTrigger=PropertyChanged, StringFormat=0.##}"
+                                         Width="72"
+                                         HorizontalContentAlignment="Center"
+                                         DockPanel.Dock="Right"
+                                         Margin="12,0,0,0" />
+                                <Slider Minimum="0.5"
+                                        Maximum="2"
+                                        TickFrequency="0.1"
+                                        IsSnapToTickEnabled="False"
+                                        Value="{Binding TtsSpeed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </DockPanel>
+
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="路径/Endpoint" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Grid.Row="5"
+                                     Grid.Column="1"
+                                     Grid.ColumnSpan="3"
+                                     Text="{Binding TtsEndpoint, UpdateSourceTrigger=PropertyChanged}"
+                                     Margin="0,0,0,10" />
+
+                            <TextBlock Grid.Row="6" Grid.Column="0" Text="TTS 指令" VerticalAlignment="Top" Margin="0,0,12,10" />
+                            <TextBox Grid.Row="6"
+                                     Grid.Column="1"
+                                     Grid.ColumnSpan="3"
+                                     Text="{Binding TtsInstructions, UpdateSourceTrigger=PropertyChanged}"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     MinHeight="54"
+                                     Margin="0,0,0,10" />
+                            <TextBlock Grid.Row="7" Grid.Column="0" Text="试听文本" VerticalAlignment="Top" Margin="0,0,12,10" />
+                            <TextBox Grid.Row="7"
+                                     Grid.Column="1"
+                                     Grid.ColumnSpan="3"
+                                     Text="{Binding TtsPreviewText, UpdateSourceTrigger=PropertyChanged}"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     MinHeight="48"
+                                     Margin="0,0,0,10" />
+
+                            <DockPanel Grid.Row="8"
+                                       Grid.Column="1"
+                                       Grid.ColumnSpan="3"
+                                       LastChildFill="False"
+                                       Margin="0,4,0,0">
+                                <CheckBox Content="优化指令"
+                                          IsChecked="{Binding TtsOptimizeInstructions, UpdateSourceTrigger=PropertyChanged}"
+                                          VerticalAlignment="Center"
+                                          DockPanel.Dock="Left" />
+                                <StackPanel Orientation="Horizontal"
+                                            HorizontalAlignment="Right"
+                                            DockPanel.Dock="Right">
+                                    <Button Content="保存检索与语音设置"
+                                            Command="{Binding SaveRuntimeCapabilitySettingsCommand}"
+                                            MinWidth="170"
+                                            Margin="0,0,10,0" />
+                                    <Button Content="保存并试听"
+                                            Command="{Binding TestTtsCommand}"
+                                            MinWidth="120" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Grid>
+
+                        <TextBlock Text="{Binding TtsConfigHint}"
+                                   Foreground="#697386"
+                                   TextWrapping="Wrap"
+                                   Margin="120,0,0,14" />
+
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,12">
+                            <TextBlock Text="TopK" VerticalAlignment="Center" Margin="0,0,12,0" />
+                            <TextBox Text="{Binding RetrievalTopK, UpdateSourceTrigger=PropertyChanged}" Width="80" />
+                            <TextBlock Text="清单型问题会自动扩大召回" Foreground="#697386" VerticalAlignment="Center" Margin="10,0,0,0" />
+                            <TextBlock Text="{Binding SecretStorageDescription, StringFormat=Embedding/语音 API Key 保存到 {0}}" VerticalAlignment="Center" Margin="24,0,12,0" />
+                            <TextBox Text="{Binding ApiKeyToSave, UpdateSourceTrigger=PropertyChanged}" Width="360" />
+                            <Button Content="保存全部设置" Command="{Binding SaveSettingsCommand}" Margin="12,0,0,0" />
+                        </StackPanel>
+
+                        <TextBlock Text="角色与提示词" FontSize="18" FontWeight="SemiBold" Margin="0,8,0,12" />
+                        <TextBlock Text="System Prompt：最高优先级行为规则，不进入知识库检索。" Foreground="#697386" />
+                        <TextBox Text="{Binding SystemPromptText, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto"
+                                 MinHeight="110"
+                                 Margin="0,6,0,12" />
+                        <TextBlock Text="角色设定：身份、语气、边界，例如“你是某某助手，需要……”" Foreground="#697386" />
+                        <TextBox Text="{Binding CharacterPromptText, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto"
+                                 MinHeight="90"
+                                 Margin="0,6,0,12" />
+                        <TextBlock Text="世界书：一行一条，格式为“名称 | 关键词1,关键词2 =&gt; 触发后注入的设定”。关键词为空则始终注入。" Foreground="#697386" />
+                        <TextBox Text="{Binding WorldBookText, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto"
+                                 MinHeight="120"
+                                 Margin="0,6,0,12" />
+
+                        <TextBlock Text="游客交互" FontSize="18" FontWeight="SemiBold" Margin="0,8,0,12" />
+                        <UniformGrid Columns="2" Rows="12">
+                            <TextBlock Text="助手名称" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Text="{Binding AssistantName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                            <TextBlock Text="软件 Logo 路径" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Text="{Binding LogoImagePath, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                            <TextBlock Text="游客窗口标题" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Text="{Binding VisitorWindowTitle, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                            <TextBlock Text="游客主标题" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Text="{Binding VisitorHeadline, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                            <TextBlock Text="唤醒提示" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Text="{Binding WakeHintText, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                            <TextBlock Text="桌宠提示" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Text="{Binding PetHintText, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                            <TextBlock Text="关闭按钮" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Text="{Binding CloseButtonText, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                            <TextBlock Text="结束会话按钮" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Text="{Binding EndSessionButtonText, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                            <TextBlock Text="预设问题标题" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Text="{Binding QuickQuestionsHeader, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                            <TextBlock Text="问答记录标题" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Text="{Binding ConversationHeader, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                            <TextBlock Text="发送按钮" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Text="{Binding SendButtonText, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                            <TextBlock Text="语音按钮" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Text="{Binding VoiceButtonText, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                        </UniformGrid>
+                        <TextBlock Text="欢迎语" Foreground="#697386" />
+                        <TextBox Text="{Binding GreetingText, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 MinHeight="70"
+                                 Margin="0,6,0,12" />
+                        <TextBlock Text="触屏预设问题（一行一个，最多 8 个）" Foreground="#697386" />
+                        <TextBox Text="{Binding QuickQuestionsText, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 MinHeight="120"
+                                 Margin="0,6,0,12" />
+                        <TextBlock Text="助手能力标签（一行一个，最多 6 个）" Foreground="#697386" />
+                        <TextBox Text="{Binding AssistantTagsText, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 MinHeight="84"
+                                 Margin="0,6,0,12" />
+                        <TextBlock Text="唤醒词（一行一个，最多 8 个）" Foreground="#697386" />
+                        <TextBox Text="{Binding WakeWordsText, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 MinHeight="96"
+                                 Margin="0,6,0,12" />
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <Button Content="保存游客交互设置"
+                                    Command="{Binding SaveVisitorInteractionSettingsCommand}"
+                                    MinWidth="160" />
+                            <TextBlock Text="保存预设问题、能力标签、唤醒词、欢迎语、按钮文案和桌宠文案。"
+                                       Foreground="#697386"
+                                       TextWrapping="Wrap"
+                                       VerticalAlignment="Center"
+                                       Margin="10,0,0,0" />
+                        </StackPanel>
+                        <TextBlock Text="桌宠状态文案" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8" />
+                        <UniformGrid Columns="2" Rows="5">
+                            <TextBlock Text="待命" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Text="{Binding IdleStatusText, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                            <TextBlock Text="聆听" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Text="{Binding ListeningStatusText, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                            <TextBlock Text="思考" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Text="{Binding ThinkingStatusText, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                            <TextBlock Text="说话" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Text="{Binding SpeakingStatusText, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                            <TextBlock Text="异常" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBox Text="{Binding ErrorStatusText, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                        </UniformGrid>
+                        <TextBlock Text="桌宠角色资源" FontSize="16" FontWeight="SemiBold" Margin="0,4,0,8" />
+                        <TextBlock Text="静态图片路径（PNG/JPG/BMP）。如果配置了序列帧目录，会优先使用序列帧。" Foreground="#697386" />
+                        <TextBox Text="{Binding PetImagePath, UpdateSourceTrigger=PropertyChanged}"
+                                 TextWrapping="Wrap"
+                                 Margin="0,6,0,10" />
+                        <TextBlock Text="序列帧目录（按文件名排序播放 PNG/JPG/BMP）" Foreground="#697386" />
+                        <TextBox Text="{Binding PetFramesDirectory, UpdateSourceTrigger=PropertyChanged}"
+                                 TextWrapping="Wrap"
+                                 Margin="0,6,0,10" />
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <TextBlock Text="帧间隔毫秒" VerticalAlignment="Center" Margin="0,0,12,0" />
+                            <TextBox Text="{Binding PetFrameIntervalMs, UpdateSourceTrigger=PropertyChanged}" Width="100" />
+                            <TextBlock Text="保存后立即刷新桌宠显示。" Foreground="#697386" VerticalAlignment="Center" Margin="12,0,0,0" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <TextBlock Text="修改管理员 PIN" VerticalAlignment="Center" Margin="0,0,12,0" />
+                            <TextBox Text="{Binding NewAdminPin, UpdateSourceTrigger=PropertyChanged}" Width="180" />
+                            <TextBlock Text="默认 PIN 为 123456，首次部署后请立即修改。" Foreground="#C2410C" VerticalAlignment="Center" Margin="12,0,0,0" />
+                        </StackPanel>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="日志">
+                <ListBox ItemsSource="{Binding Logs}"
+                         Margin="12"
+                         BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="#DDE3EA" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,8" Background="#FFFFFF">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <TextBlock Text="{Binding Timestamp}" Foreground="#697386" />
+                                        <TextBlock Text="  " />
+                                        <TextBlock Text="{Binding Level}" FontWeight="SemiBold" Foreground="#C2410C" />
+                                    </StackPanel>
+                                    <TextBox Text="{Binding Message}"
+                                             IsReadOnly="True"
+                                             BorderThickness="0"
+                                             Background="Transparent"
+                                             TextWrapping="Wrap"
+                                             FontFamily="Consolas"
+                                             FontSize="12"
+                                             VerticalScrollBarVisibility="Auto"
+                                             MaxHeight="240" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </TabItem>
+        </TabControl>
+
+        <TextBlock Grid.Row="2"
+                   Text="{Binding AdminFooterText}"
+                   Foreground="#697386"
+                   Margin="0,12,0,0" />
+    </Grid>
+</Window>

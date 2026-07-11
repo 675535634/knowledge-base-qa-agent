@@ -1,0 +1,44 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Name="Knowledge Base QA Agent"
+           Manufacturer="KnowledgeBaseQaAgent"
+           Version="0.1.1"
+           UpgradeCode="3F0E5F8A-5C62-4E8B-8E49-8F6E1B1BE632"
+           Scope="perMachine">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Knowledge Base QA Agent is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    <ui:WixUI Id="WixUI_InstallDir" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Knowledge Base QA Agent">
+        <Files Include="!(bindpath.KnowledgeBaseQaAgent.Desktop)\**" />
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="Knowledge Base QA Agent">
+        <Component Id="StartMenuShortcut" Guid="B9B9F150-A22A-4A97-BC5E-6E8215D8D4B5">
+          <Shortcut Id="ApplicationStartMenuShortcut"
+                    Name="Knowledge Base QA Agent"
+                    Description="Knowledge base voice QA desktop agent"
+                    Target="[INSTALLFOLDER]KnowledgeBaseQaAgent.Desktop.exe"
+                    WorkingDirectory="INSTALLFOLDER" />
+          <Shortcut Id="ApplicationUninstallShortcut"
+                    Name="Uninstall Knowledge Base QA Agent"
+                    Description="Uninstall Knowledge Base QA Agent"
+                    Target="[System64Folder]msiexec.exe"
+                    Arguments="/x [ProductCode]" />
+          <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+          <RegistryValue Root="HKCU"
+                         Key="Software\KnowledgeBaseQaAgent"
+                         Name="installed"
+                         Type="integer"
+                         Value="1"
+                         KeyPath="yes" />
+        </Component>
+      </Directory>
+    </StandardDirectory>
+  </Package>
+</Wix>
