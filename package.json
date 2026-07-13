@@ -1,7 +1,7 @@
 {
   "name": "knowledge-base-qa-electron",
   "version": "2.1.0",
-  "description": "Electron rewrite of the offline-first knowledge base kiosk assistant",
+  "description": "Generic offline-first knowledge base agent built with Electron",
   "author": "Knowledge Base QA Agent contributors",
   "main": "out/main/index.js",
   "type": "module",
@@ -40,11 +40,11 @@
   },
   "build": {
     "appId": "cn.nanning.kbqa",
-    "productName": "知识库智能助手",
+    "productName": "通用知识库智能体",
     "compression": "normal",
     "asarUnpack": ["resources/runtime/**", "node_modules/better-sqlite3/**"],
     "files": ["out/**", "package.json"],
     "extraResources": [{"from": "resources", "to": "resources"}, {"from": "portable.flag", "to": "portable.flag"}],
-    "win": {"target": "portable", "icon": "resources/brand/logo.ico"}
+    "win": {"target": "portable"}
   }
 }

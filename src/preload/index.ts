@@ -3,6 +3,7 @@ import type { AppSettings, AvatarState, DesktopApi } from '../shared/contracts'
 
 const api: DesktopApi = {
   settings: { get: () => ipcRenderer.invoke('settings:get'), save: (value: AppSettings) => ipcRenderer.invoke('settings:save', value) },
+  providers: { listModels: (provider) => ipcRenderer.invoke('providers:listModels', provider) },
   knowledge: { list: () => ipcRenderer.invoke('knowledge:list'), import: () => ipcRenderer.invoke('knowledge:import'), remove: (id) => ipcRenderer.invoke('knowledge:remove', id), clear: () => ipcRenderer.invoke('knowledge:clear') },
   chat: { history: () => ipcRenderer.invoke('chat:history'), ask: (question) => ipcRenderer.invoke('chat:ask', question), clear: () => ipcRenderer.invoke('chat:clear') },
   speech: { transcribe: (samples) => ipcRenderer.invoke('speech:transcribe', samples), speak: (text) => ipcRenderer.invoke('speech:speak', text), stop: () => ipcRenderer.invoke('speech:stop') },

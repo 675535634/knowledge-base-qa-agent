@@ -7,8 +7,8 @@ const states: AvatarState[] = ['idle','listening','thinking','speaking','error']
 export class AssetService {
   constructor(private paths: AppPaths, private getSettings: () => AppSettings) {}
   get(): { logo: string; frames: Record<AvatarState,string[]> } {
-    const settings=this.getSettings(); const defaultLogo=join(this.paths.resources,'brand','logo.png')
-    const logo=dataUrl(existsSync(settings.assets.logoPath)?settings.assets.logoPath:defaultLogo)
+    const settings=this.getSettings()
+    const logo=dataUrl(settings.assets.logoPath)
     const frames={} as Record<AvatarState,string[]>
     for(const state of states){
       const custom=join(settings.assets.petFramesPath||'',state)

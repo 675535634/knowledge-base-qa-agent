@@ -9,23 +9,38 @@ import { defaults } from '../src/main/services/settings'
 import { providerCatalog } from '../src/shared/providerCatalog'
 import { TtsService } from '../src/main/services/tts'
 import { resolve } from 'node:path'
+import { classifyModels, extractModels } from '../src/main/services/provider-models'
 
 describe('local fallback', () => {
   it('ships eight visitor presets and the full provider catalog',()=>{expect(defaults.quickQuestions).toHaveLength(8);expect(providerCatalog.length).toBeGreaterThanOrEqual(66)})
   it('creates deterministic normalized 384-dimensional embeddings', () => {
-    const first = hashEmbedding('招生 专业 报名')
-    const second = hashEmbedding('招生 专业 报名')
+    const first = hashEmbedding('产品 功能 流程')
+    const second = hashEmbedding('产品 功能 流程')
     expect(first).toEqual(second)
     expect(first).toHaveLength(384)
     expect(Math.sqrt(first.reduce((sum, value) => sum + value * value, 0))).toBeCloseTo(1, 6)
   })
 
   it('separates unrelated Chinese text', () => {
-    const a = hashEmbedding('学校招生报名材料')
-    const b = hashEmbedding('学校招生报名时间')
+    const a = hashEmbedding('产品申请所需材料')
+    const b = hashEmbedding('产品申请办理时间')
     const c = hashEmbedding('今天天气晴朗')
     const cosine = (x: number[], y: number[]) => x.reduce((sum, n, i) => sum + n * y[i], 0)
     expect(cosine(a, b)).toBeGreaterThan(cosine(a, c))
+  })
+})
+
+describe('provider model discovery', () => {
+  it('parses provider and Ollama responses while removing unavailable models', () => {
+    expect(extractModels({ data: [{ id: 'gpt-live' }, { id: 'gpt-removed', archived: true }] })).toEqual(['gpt-live'])
+    expect(extractModels({ models: [{ name: 'qwen2.5:latest' }, { model: 'whisper:latest' }] })).toEqual(['qwen2.5:latest', 'whisper:latest'])
+  })
+
+  it('separates chat, embedding and ASR model dropdowns', () => {
+    const catalog = classifyModels(['qwen-plus', 'text-embedding-v4', 'qwen3-asr-flash', 'whisper-1', 'qwen-tts'])
+    expect(catalog.chat).toEqual(['qwen-plus'])
+    expect(catalog.embedding).toEqual(['text-embedding-v4'])
+    expect(catalog.asr).toEqual(['qwen3-asr-flash', 'whisper-1'])
   })
 })
 

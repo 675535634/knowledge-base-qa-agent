@@ -11,7 +11,8 @@ import { RagService } from './services/rag'
 import { TtsService } from './services/tts'
 import { SecretStore } from './services/secrets'
 import { AssetService } from './services/assets'
-import type { AppSettings, AvatarState } from '../shared/contracts'
+import { fetchProviderModels } from './services/provider-models'
+import type { AppSettings, AvatarState, ProviderConfig } from '../shared/contracts'
 
 let visitor: BrowserWindow | undefined, admin: BrowserWindow | undefined, pet: BrowserWindow | undefined
 let tray: Tray | undefined, appMenu: Menu | undefined
@@ -50,15 +51,16 @@ function showAdmin(): void {
 }
 function showVisitor(): void { visitor?.show(); visitor?.focus() }
 function quitApplication(): void { quitting = true; app.quit() }
-function createTray(iconPath: string): void {
+async function createTray(): Promise<void> {
   appMenu = Menu.buildFromTemplate([
     { label: '打开问答窗口', click: showVisitor },
     { label: '管理员控制台  Ctrl+1', click: showAdmin },
     { type: 'separator' },
     { label: '退出', click: quitApplication }
   ])
-  tray = new Tray(iconPath)
-  tray.setToolTip('知识库智能助手')
+  const systemAppIcon = await app.getFileIcon(process.execPath, { size: 'small' })
+  tray = new Tray(systemAppIcon)
+  tray.setToolTip('通用知识库智能体')
   tray.setContextMenu(appMenu)
   tray.on('click', showVisitor)
 }
@@ -74,6 +76,7 @@ app.whenReady().then(() => {
   const documents = new DocumentService(db, ai); const llm = new LlmService(() => settings); const rag = new RagService(db, ai, llm, () => settings); const tts = new TtsService(paths, () => settings); const assets=new AssetService(paths,()=>settings)
 
   ipcMain.handle('settings:get', () => settings)
+  ipcMain.handle('providers:listModels', (_e, provider: ProviderConfig) => fetchProviderModels(provider))
   ipcMain.handle('settings:save', (_e, value: AppSettings) => {
     secrets.set('llm-api-key', value.llm.apiKey)
     for(const provider of value.providers)secrets.set(`provider-${provider.id}`,provider.apiKey)
@@ -107,7 +110,7 @@ app.whenReady().then(() => {
   ipcMain.handle('pet:endDrag',()=>{dragStart=undefined})
   ipcMain.handle('pet:showMenu', () => appMenu?.popup({ window: pet }))
   createWindows()
-  createTray(join(paths.resources, 'brand', 'logo.ico'))
+  void createTray()
   globalShortcut.register('Control+1', showAdmin)
 })
 

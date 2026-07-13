@@ -1,6 +1,6 @@
-# 知识库智能助手 · Electron 重构版
+# 通用知识库智能体 · Electron 版
 
-这是原 WPF 项目的完全 Electron/TypeScript 重构。工程内没有 C# 源码，也不依赖 .NET 运行时。
+这是一个不绑定学校、企业、政府部门或行业的通用知识库智能体。工程完全使用 Electron/TypeScript，不依赖 .NET 运行时。
 
 ## 已实现
 
@@ -18,9 +18,9 @@ npm install
 npm run dev
 ```
 
-仓库是纯源码分支，不包含私有 Logo、桌宠帧、PDF/知识库文档、模型、运行时 DLL 或 EXE。首次执行 Embedding / ASR 时，Transformers.js 会把 ONNX 模型下载至本地模型缓存；下载完成后可离线运行。Embedding 模型不可用时会自动切换到 384 维本地 Hash 检索。
+仓库只提供源码，不附带 Logo、应用图标、PDF/知识库文档、模型、运行时 DLL、EXE 或构建产物。首次执行 Embedding / ASR 时，Transformers.js 会把 ONNX 模型下载至本地模型缓存；下载完成后可离线运行。Embedding 模型不可用时会自动切换到 384 维本地 Hash 检索。
 
-本地开发时可自行放置 `resources/brand/`、`resources/pet/` 和 `src/renderer/public/`，这些目录及常见图片、文档、音视频格式已被 Git 忽略，不会误提交个人资产。
+管理员可以在运行后自行选择 Logo 和桌宠资源。`resources/`、`src/renderer/public/` 以及常见图片、文档、音视频格式均被 Git 忽略，不会误提交用户资产。未配置 Logo 时界面显示纯 CSS 文字占位，托盘使用操作系统提供的应用图标。
 
 如需本地 TTS，请从现有 portable 的 `Tools/VITS` 导入当前唯一使用的 `sherpa-onnx-vits-zh-ll`：
 
@@ -44,4 +44,4 @@ npm run package
 - `src/main`：Electron 主进程、SQLite、RAG、LLM、本地模型与 VITS
 - `src/preload`：最小化、类型安全的 IPC 桥
 - `src/renderer`：React 访客端、管理端与透明桌宠窗口
-- `resources`：品牌、CC0 桌宠帧及本地运行时
+- `resources`：用户自行准备的桌宠资源及本地运行时（不纳入仓库）

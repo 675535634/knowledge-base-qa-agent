@@ -13,4 +13,7 @@ const entries: Entry[] = [
   ['openai-compatible','OpenAI API Compatible',''],['custom','自定义服务商','', 'custom'],['bedrock','AWS Bedrock','', 'custom'],['vertex-ai','Google Vertex AI','', 'gemini'],['azure-ai-studio','Azure AI Studio','', 'custom'],['sagemaker','AWS SageMaker','', 'custom'],['oci','Oracle OCI','', 'custom'],['replicate','Replicate','https://api.replicate.com/v1','custom'],['poe','Poe','https://api.poe.com/v1'],['vessl-ai','VESSL AI',''],['leptonai','Lepton AI',''],['regolo','Regolo',''],['perfxcloud','PerfXCloud',''],['deerapi','DeerAPI',''],['cometapi','CometAPI','']
 ]
 
-export const providerCatalog: ProviderConfig[] = entries.map(([id,name,baseUrl,protocol='openai']) => ({ id,name,baseUrl,protocol,apiKey:'',chatModel:'',embeddingModel:'',asrModel:'',enabled:false }))
+export const providerCatalog: ProviderConfig[] = entries.map(([id,name,baseUrl,protocol='openai']) => ({
+  id,name,baseUrl,protocol,apiKey:'',chatModel:'',embeddingModel:'',asrModel:'',enabled:false,
+  modelCatalog:{all:[],chat:[],embedding:[],asr:[]}
+}))

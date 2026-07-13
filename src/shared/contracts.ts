@@ -7,9 +7,11 @@ export interface LlmSettings {
   enableThinking: boolean
 }
 export type ProviderProtocol = 'openai' | 'anthropic' | 'gemini' | 'azure-openai' | 'custom'
+export interface ProviderModelCatalog { all: string[]; chat: string[]; embedding: string[]; asr: string[] }
 export interface ProviderConfig {
   id: string; name: string; protocol: ProviderProtocol; baseUrl: string; apiKey: string
   chatModel: string; embeddingModel: string; asrModel: string; enabled: boolean
+  modelCatalog: ProviderModelCatalog
 }
 
 export interface AppSettings {
@@ -41,6 +43,7 @@ export interface RuntimeStatus { embedding: string; asr: string; tts: string; da
 
 export interface DesktopApi {
   settings: { get(): Promise<AppSettings>; save(value: AppSettings): Promise<AppSettings> }
+  providers: { listModels(provider: ProviderConfig): Promise<ProviderModelCatalog> }
   knowledge: { list(): Promise<DocumentRow[]>; import(): Promise<{ files: number; chunks: number }>; remove(id: number): Promise<void>; clear(): Promise<void> }
   chat: { history(): Promise<ChatRow[]>; ask(question: string): Promise<AskResult>; clear(): Promise<void> }
   speech: { transcribe(samples: Float32Array): Promise<string>; speak(text: string): Promise<Uint8Array>; stop(): Promise<void> }
