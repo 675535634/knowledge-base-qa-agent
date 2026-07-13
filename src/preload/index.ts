@@ -11,6 +11,6 @@ const api: DesktopApi = {
   assets: { get: () => ipcRenderer.invoke('assets:get'), chooseLogo: () => ipcRenderer.invoke('assets:chooseLogo'), choosePetFrames: () => ipcRenderer.invoke('assets:choosePetFrames') },
   app: { runtimeStatus: () => ipcRenderer.invoke('app:runtimeStatus'), openAdmin: () => ipcRenderer.invoke('app:openAdmin'), showVisitor: () => ipcRenderer.invoke('app:showVisitor'), closeVisitor: () => ipcRenderer.invoke('app:closeVisitor'), quit: () => ipcRenderer.invoke('app:quit') },
   pet: { setState: (state) => ipcRenderer.invoke('pet:setState', state), beginDrag: () => ipcRenderer.invoke('pet:beginDrag'), drag: () => ipcRenderer.invoke('pet:drag'), endDrag: () => ipcRenderer.invoke('pet:endDrag'), showMenu: () => ipcRenderer.invoke('pet:showMenu') },
-  events: { onAvatarState(callback: (state: AvatarState) => void) { const handler = (_: unknown, state: AvatarState) => callback(state); ipcRenderer.on('avatar:state', handler); return () => ipcRenderer.removeListener('avatar:state', handler) } }
+  events: { onAvatarState(callback: (state: AvatarState) => void) { const handler = (_: unknown, state: AvatarState) => callback(state); ipcRenderer.on('avatar:state', handler); return () => { ipcRenderer.removeListener('avatar:state', handler) } } }
 }
 contextBridge.exposeInMainWorld('desktop', api)

@@ -15,7 +15,7 @@ export function browserMock(): DesktopApi {
   return {
     settings: { get: async () => settings, save: async (value) => Object.assign(settings, value) },
     providers: { listModels: async () => ({ all:['qwen-plus','text-embedding-v4','qwen3-asr-flash'],chat:['qwen-plus'],embedding:['text-embedding-v4'],asr:['qwen3-asr-flash'] }) },
-    knowledge: { list: async () => [{ id: 1, title: '产品手册.pdf', path: 'D:/资料/产品手册.pdf', chunks: 24, createdAt: new Date().toISOString() }], import: async () => ({ files: 0, chunks: 0 }), remove: async () => {}, clear: async () => {} },
+    knowledge: { list: async () => [{ id: 1, title: '示例知识.md', path: 'C:/Documents/example.md', chunks: 24, createdAt: new Date().toISOString() }], import: async () => ({ files: 0, chunks: 0 }), remove: async () => {}, clear: async () => {} },
     chat: { history: async () => [{ id: 1, role: 'assistant', content: '您好，我在。请问想了解什么？', createdAt: new Date().toISOString() }], ask: async () => ({ answer: '这是浏览器预览模式。', citations: [] }), clear: async () => {} },
     speech: { transcribe: async () => '', speak: async () => new Uint8Array(), stop: async () => {} }, auth:{verify:async()=>true,change:async()=>true}, assets:{get:async()=>({logo:'',frames:{idle:[],listening:[],thinking:[],speaking:[],error:[]}}),chooseLogo:async()=>'',choosePetFrames:async()=>''},
     app: { runtimeStatus: async () => ({ embedding: '本地 ONNX · bge-small-zh-v1.5', asr: '本地 Whisper ONNX', tts: '本地 VITS · sherpa-onnx-vits-zh-ll', dataDir: 'Data' }), openAdmin: async () => {}, showVisitor: async () => {}, closeVisitor: async () => {}, quit: async () => {} },
