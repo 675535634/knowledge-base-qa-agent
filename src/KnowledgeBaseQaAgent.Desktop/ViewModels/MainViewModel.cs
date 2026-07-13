@@ -630,6 +630,23 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         }
     }
 
+    [RelayCommand]
+    private async Task ChangeAdminPinAsync()
+    {
+        if (string.IsNullOrWhiteSpace(NewAdminPin) || NewAdminPin.Length < 6)
+        {
+            Status = "管理员 PIN 至少 6 位";
+            AddLog("Warning", Status);
+            return;
+        }
+
+        _settings.AdminPinHash = HashPin(NewAdminPin);
+        NewAdminPin = "";
+        await _settingsService.SaveAsync(_settings, _disposeCts.Token);
+        Status = "管理员 PIN 已更新";
+        AddLog("Info", Status);
+    }
+
     private bool ApplyVisitorInteractionSettings()
     {
         _settings.AssistantName = Required(AssistantName, AppSettings.DefaultAssistantName);

@@ -16,7 +16,7 @@ artifacts/
 *.wav
 *.mp3
 *.mp4
-src/KnowledgeBaseQaAgent.Desktop/Assets/Brand/
+src/KnowledgeBaseQaAgent.Desktop/Assets/
 UserAssets/
 *.ico
 

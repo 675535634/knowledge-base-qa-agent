@@ -113,11 +113,8 @@ public sealed class SettingsService
             settings.PetFrameIntervalMs = 650;
         }
 
-        if (string.IsNullOrWhiteSpace(settings.PetImagePath) && string.IsNullOrWhiteSpace(settings.PetFramesDirectory))
-        {
-            settings.PetImagePath = AppSettings.DefaultPetImagePath;
-        }
-
+        settings.PetImagePath = settings.PetImagePath?.Trim() ?? "";
+        settings.PetFramesDirectory = settings.PetFramesDirectory?.Trim() ?? "";
         settings.LogoImagePath = settings.LogoImagePath?.Trim() ?? "";
 
         settings.SystemPrompt = DefaultIfEmptyOrOldSystemPrompt(settings.SystemPrompt, AppSettings.DefaultSystemPrompt);
@@ -148,19 +145,23 @@ public sealed class SettingsService
             settings.AssistantTags.AddRange(["知识库问答", "语音交互", "触屏友好", "本地索引"]);
         }
 
-        if (settings.QuickQuestions.Count == 0)
+        settings.QuickQuestions = settings.QuickQuestions
+            .Where(question => !string.IsNullOrWhiteSpace(question))
+            .Select(question => question.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(8)
+            .ToList();
+        foreach (var defaultQuestion in AppSettings.DefaultQuickQuestions)
         {
-            settings.QuickQuestions.AddRange(
-            [
-                "请概括知识库的主要内容。",
-                "有哪些重要信息需要优先了解？",
-                "请列出相关流程或操作步骤。",
-                "有哪些规则、限制或注意事项？",
-                "请整理相关项目、产品或服务清单。",
-                "知识库中有哪些常见问题？",
-                "请比较文档中的不同方案。",
-                "当前问题缺少哪些信息？"
-            ]);
+            if (settings.QuickQuestions.Count >= 8)
+            {
+                break;
+            }
+
+            if (!settings.QuickQuestions.Contains(defaultQuestion, StringComparer.OrdinalIgnoreCase))
+            {
+                settings.QuickQuestions.Add(defaultQuestion);
+            }
         }
 
         RepairAliyunQwenTtsSelection(settings);

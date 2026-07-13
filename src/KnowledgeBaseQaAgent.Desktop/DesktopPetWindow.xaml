@@ -15,6 +15,11 @@
         MouseMove="Window_MouseMove"
         MouseLeftButtonUp="Window_MouseLeftButtonUp">
     <Window.Resources>
+        <RadialGradientBrush x:Key="PetIdleBrush" GradientOrigin="0.35,0.25" Center="0.42,0.38" RadiusX="0.72" RadiusY="0.72">
+            <GradientStop Color="#F5FFF8" Offset="0" />
+            <GradientStop Color="#B9E3C6" Offset="0.52" />
+            <GradientStop Color="#83C99A" Offset="1" />
+        </RadialGradientBrush>
         <Storyboard x:Key="BobStoryboard" RepeatBehavior="Forever" AutoReverse="True">
             <DoubleAnimation Storyboard.TargetName="PetBodyTranslate"
                              Storyboard.TargetProperty="Y"
@@ -48,10 +53,13 @@
                        Height="250"
                        RenderOptions.BitmapScalingMode="HighQuality" />
                 <Grid Visibility="{Binding BuiltInAvatarVisibility}">
+                    <Grid.Effect>
+                        <DropShadowEffect BlurRadius="20" ShadowDepth="8" Opacity="0.2" Color="#35445A" />
+                    </Grid.Effect>
                     <Ellipse x:Name="Body" Width="116" Height="126" Stroke="#1D2433" StrokeThickness="3" HorizontalAlignment="Center" VerticalAlignment="Bottom">
                     <Ellipse.Style>
                         <Style TargetType="Ellipse">
-                            <Setter Property="Fill" Value="#B9E3C6" />
+                            <Setter Property="Fill" Value="{StaticResource PetIdleBrush}" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding State}" Value="{x:Static models:AvatarState.Listening}">
                                     <Setter Property="Fill" Value="#A7F3D0" />
@@ -69,8 +77,8 @@
                         </Style>
                     </Ellipse.Style>
                     </Ellipse>
-                    <Ellipse Width="42" Height="54" Fill="#B9E3C6" Stroke="#1D2433" StrokeThickness="3" HorizontalAlignment="Left" Margin="18,8,0,0" VerticalAlignment="Top" />
-                    <Ellipse Width="42" Height="54" Fill="#B9E3C6" Stroke="#1D2433" StrokeThickness="3" HorizontalAlignment="Right" Margin="0,8,18,0" VerticalAlignment="Top" />
+                    <Ellipse Width="42" Height="54" Fill="{StaticResource PetIdleBrush}" Stroke="#1D2433" StrokeThickness="3" HorizontalAlignment="Left" Margin="18,8,0,0" VerticalAlignment="Top" />
+                    <Ellipse Width="42" Height="54" Fill="{StaticResource PetIdleBrush}" Stroke="#1D2433" StrokeThickness="3" HorizontalAlignment="Right" Margin="0,8,18,0" VerticalAlignment="Top" />
                     <Ellipse Width="16" Height="18" Fill="#1D2433" HorizontalAlignment="Left" Margin="50,58,0,0" VerticalAlignment="Top" />
                     <Ellipse Width="16" Height="18" Fill="#1D2433" HorizontalAlignment="Right" Margin="0,58,50,0" VerticalAlignment="Top" />
                     <Path Data="M 62 92 Q 75 105 88 92" Stroke="#1D2433" StrokeThickness="3" Fill="Transparent" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
@@ -98,20 +106,20 @@
                 </Grid>
             </Grid>
             <Border x:Name="HintBubble"
-                    Width="176"
+                    Width="190"
                     Background="#F7FBFFFF"
                     BorderBrush="#DDE3EA"
                     BorderThickness="1"
                     CornerRadius="14"
-                    Padding="16,10"
+                    Padding="14,9"
                     Canvas.Left="139"
                     Canvas.Top="280">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="14" ShadowDepth="4" Opacity="0.16" Color="#50608A" />
                 </Border.Effect>
                 <StackPanel>
-                    <TextBlock Text="{Binding StatusText}" Foreground="#1D2433" FontSize="28" FontWeight="SemiBold" HorizontalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
-                    <TextBlock Text="{Binding PetHintText}" Foreground="#697386" FontSize="24" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,4,0,0" />
+                    <TextBlock Text="{Binding StatusText}" Foreground="#1D2433" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding PetHintText}" Foreground="#697386" FontSize="12" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,3,0,0" />
                 </StackPanel>
             </Border>
         </Canvas>

@@ -2,37 +2,74 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="管理员验证"
-        Width="420"
-        Height="260"
+        Width="460"
+        Height="320"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
-        Background="#F4F7FB">
-    <Grid Margin="24">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <TextBlock Text="管理员验证" FontSize="24" FontWeight="SemiBold" Foreground="#172033" />
-        <TextBlock Grid.Row="1"
-                   Text="请输入管理员 PIN 后进入设置和知识库管理。"
-                   TextWrapping="Wrap"
-                   Foreground="#566275"
-                   Margin="0,8,0,16" />
-        <PasswordBox x:Name="PinBox"
-                     Grid.Row="2"
-                     FontSize="24"
-                     MinHeight="52"
-                     Padding="12"
-                     PasswordChar="●"
-                     KeyDown="PinBox_KeyDown" />
-        <DockPanel Grid.Row="3" Margin="0,18,0,0">
-            <TextBlock x:Name="ErrorText" Foreground="#C2410C" VerticalAlignment="Center" />
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="取消" Padding="16,8" Margin="0,0,8,0" Click="CancelButton_Click" />
-                <Button Content="进入" Padding="18,8" Background="#2D7FF9" Foreground="White" Click="OkButton_Click" />
-            </StackPanel>
-        </DockPanel>
+        FontFamily="Segoe UI Variable Text, Microsoft YaHei UI"
+        Background="#F2F4FF">
+    <Window.Resources>
+        <LinearGradientBrush x:Key="LoginBackground" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#F1EDFF" Offset="0" />
+            <GradientStop Color="#EFF8FF" Offset="1" />
+        </LinearGradientBrush>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="18,9" />
+            <Setter Property="MinWidth" Value="86" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="{StaticResource LoginBackground}">
+        <Border Margin="28"
+                Padding="26"
+                Background="#FAFFFFFF"
+                BorderBrush="#FFFFFF"
+                BorderThickness="1"
+                CornerRadius="24">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="8" Opacity="0.13" Color="#4D467A" />
+            </Border.Effect>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="46" Height="46" CornerRadius="15" Background="#756BE3" Margin="0,0,13,0">
+                        <TextBlock Text="AI" Foreground="White" FontSize="15" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="管理员验证" FontSize="23" FontWeight="SemiBold" Foreground="#172033" />
+                        <TextBlock Text="ADMIN ACCESS" FontSize="10" FontWeight="SemiBold" Foreground="#8074E5" Margin="0,3,0,0" />
+                    </StackPanel>
+                </StackPanel>
+                <TextBlock Grid.Row="1"
+                           Text="输入管理员 PIN 后进入设置与知识库管理。"
+                           TextWrapping="Wrap"
+                           Foreground="#697386"
+                           Margin="0,17,0,9" />
+                <PasswordBox x:Name="PinBox"
+                             Grid.Row="2"
+                             FontSize="20"
+                             MinHeight="48"
+                             Padding="13,8"
+                             PasswordChar="●"
+                             Background="#FAFBFF"
+                             BorderBrush="#D9DEEE"
+                             KeyDown="PinBox_KeyDown" />
+                <DockPanel Grid.Row="3" Margin="0,16,0,0">
+                    <TextBlock x:Name="ErrorText" Foreground="#C2410C" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="170" />
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="取消" Margin="0,0,9,0" Background="#FFFFFF" BorderBrush="#D9DEEE" Foreground="#566275" Click="CancelButton_Click" />
+                        <Button Content="进入" Background="#756BE3" BorderBrush="#756BE3" Foreground="White" Click="OkButton_Click" />
+                    </StackPanel>
+                </DockPanel>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

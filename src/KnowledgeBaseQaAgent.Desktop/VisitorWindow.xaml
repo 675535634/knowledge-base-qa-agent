@@ -11,6 +11,7 @@
         ResizeMode="NoResize"
         WindowState="Maximized"
         Icon="{Binding LogoPreviewImagePath}"
+        FontFamily="Segoe UI Variable Text, Microsoft YaHei UI"
         Background="#F7F9FF"
         PreviewKeyDown="Window_PreviewKeyDown"
         Closing="Window_Closing">
@@ -79,10 +80,10 @@
         </Style>
 
         <Style x:Key="QuickButton" TargetType="Button">
-            <Setter Property="MinHeight" Value="68" />
-            <Setter Property="Padding" Value="18,12" />
-            <Setter Property="Margin" Value="0,0,0,12" />
-            <Setter Property="FontSize" Value="17" />
+            <Setter Property="MinHeight" Value="52" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="FontSize" Value="15" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Foreground" Value="#28304F" />
             <Setter Property="Background" Value="#F8FAFF" />
@@ -105,6 +106,18 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F0F2FF" />
+                    <Setter Property="BorderBrush" Value="#B9B7FF" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Opacity" Value="0.78" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.5" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="InputBox" TargetType="TextBox">
@@ -172,14 +185,19 @@
                     <ColumnDefinition Width="290" />
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Style="{StaticResource Panel}" Padding="20" Margin="0,0,18,0">
+                <Border Grid.Column="0" Style="{StaticResource Panel}" Padding="18" Margin="0,0,18,0">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <StackPanel Margin="0,0,0,16">
-                            <TextBlock Text="{Binding QuickQuestionsHeader}" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource Ink}" />
+                        <StackPanel Margin="0,0,0,12">
+                            <DockPanel LastChildFill="True">
+                                <Border DockPanel.Dock="Right" Background="#EEEAFE" CornerRadius="12" Padding="9,4" Margin="8,0,0,0">
+                                    <TextBlock Text="{Binding QuickQuestions.Count, StringFormat={}{0} 项}" FontSize="11" FontWeight="SemiBold" Foreground="#6B61D5" />
+                                </Border>
+                                <TextBlock Text="{Binding QuickQuestionsHeader}" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource Ink}" />
+                            </DockPanel>
                             <TextBlock Text="{Binding GreetingText}" TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource Muted}" Margin="0,8,0,0" />
                         </StackPanel>
                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -320,13 +338,16 @@
                                 </Rectangle>
                                 <TextBlock Text="✦" FontSize="52" Foreground="#FFFFFF" Opacity="0.8" Margin="18,14,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
                                 <TextBlock Text="✧" FontSize="64" Foreground="#7C83FF" Opacity="0.2" Margin="0,0,18,18" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
+                                <Border Width="146" Height="146" CornerRadius="73" Background="#D9D5FF" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="AI" FontSize="38" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
                                 <Image Source="{Binding PetPreviewImagePath}" Stretch="Uniform" Margin="24,10" RenderOptions.BitmapScalingMode="HighQuality" />
                             </Grid>
                         </Border>
 
                         <StackPanel Grid.Row="1" Margin="0,18,0,0">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <TextBlock Text="{Binding AssistantName}" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource Ink}" TextWrapping="Wrap" MaxWidth="170" />
+                                <TextBlock Text="{Binding AssistantName}" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource Ink}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" MaxWidth="184" />
                                 <Border Background="#EAF9F0" CornerRadius="12" Padding="9,4" MinWidth="58" MinHeight="28" Margin="10,1,0,0">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <Ellipse Width="7" Height="7" Fill="#4ACB75" VerticalAlignment="Center" Margin="0,0,5,0" />

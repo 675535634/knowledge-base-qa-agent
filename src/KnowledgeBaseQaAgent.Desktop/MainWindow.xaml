@@ -4,10 +4,11 @@
         Closing="Window_Closing"
         Title="Knowledge Base QA Agent - 管理员控制台"
         Icon="{Binding LogoPreviewImagePath}"
-        Height="720"
+        Height="780"
         MinHeight="620"
-        Width="1120"
-        MinWidth="980"
+        Width="1180"
+        MinWidth="1000"
+        FontFamily="Segoe UI Variable Text, Microsoft YaHei UI"
         Background="#F7F9FF">
     <Window.Resources>
         <LinearGradientBrush x:Key="AdminBackground" StartPoint="0,0" EndPoint="1,1">
@@ -45,6 +46,17 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Opacity" Value="0.9" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Opacity" Value="0.78" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.45" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
         <Style TargetType="TextBox">
             <Setter Property="Padding" Value="8" />
@@ -57,6 +69,43 @@
             <Setter Property="MinWidth" Value="240" />
             <Setter Property="Background" Value="#FAFBFF" />
             <Setter Property="BorderBrush" Value="#DDE5F5" />
+        </Style>
+        <Style x:Key="NavigationTabItem" TargetType="TabItem">
+            <Setter Property="Foreground" Value="#697386" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="18,10" />
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="TabSurface"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="TabSurface" Property="Background" Value="#F0F2FF" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="TabSurface" Property="Background" Value="#ECEAFF" />
+                                <Setter TargetName="TabSurface" Property="BorderBrush" Value="#D8D5FF" />
+                                <Setter Property="Foreground" Value="#6459D2" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SectionCard" TargetType="Border">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#E4E8F2" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="Padding" Value="22" />
         </Style>
     </Window.Resources>
 
@@ -88,7 +137,11 @@
             </StackPanel>
         </DockPanel>
 
-        <TabControl Grid.Row="1" Background="Transparent" BorderBrush="#DDE5F5">
+        <TabControl x:Name="AdminTabs"
+                    Grid.Row="1"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    ItemContainerStyle="{StaticResource NavigationTabItem}">
             <TabItem Header="问答">
                 <Grid Margin="12">
                     <Grid.RowDefinitions>
@@ -164,10 +217,17 @@
             </TabItem>
 
             <TabItem Header="设置">
-                <ScrollViewer Margin="12">
-                    <StackPanel>
-                        <TextBlock Text="Provider 选择" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12" />
-                        <TextBlock Text="LLM 供应商" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12" />
+                <Grid Margin="12">
+                    <TabControl x:Name="SettingsTabs"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                ItemContainerStyle="{StaticResource NavigationTabItem}">
+                        <TabItem Header="模型服务">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,8,10,0">
+                                <Border Style="{StaticResource SectionCard}">
+                                    <StackPanel>
+                        <TextBlock Text="LLM 服务商" FontSize="19" FontWeight="SemiBold" Margin="0,0,0,5" />
+                        <TextBlock Text="选择服务商后可实时同步当前可用模型；已下架模型不会保留在列表中。" Foreground="#697386" TextWrapping="Wrap" Margin="0,0,0,18" />
                         <Grid Margin="0,0,0,12">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -226,7 +286,16 @@
                                       IsChecked="{Binding LlmEnableThinking, UpdateSourceTrigger=PropertyChanged}"
                                       Margin="0,10,0,0" />
                         </Grid>
-                        <TextBlock Text="检索与语音" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,12" />
+                                    </StackPanel>
+                                </Border>
+                            </ScrollViewer>
+                        </TabItem>
+                        <TabItem Header="本地能力">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,8,10,0">
+                                <Border Style="{StaticResource SectionCard}">
+                                    <StackPanel>
+                        <TextBlock Text="检索与语音" FontSize="19" FontWeight="SemiBold" Margin="0,0,0,5" />
+                        <TextBlock Text="Embedding、ASR 和本地 TTS 的运行方式及兜底配置。" Foreground="#697386" TextWrapping="Wrap" Margin="0,0,0,18" />
                         <Grid Margin="0,0,0,12">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -352,8 +421,16 @@
                             <TextBox Text="{Binding ApiKeyToSave, UpdateSourceTrigger=PropertyChanged}" Width="360" />
                             <Button Content="保存全部设置" Command="{Binding SaveSettingsCommand}" Margin="12,0,0,0" />
                         </StackPanel>
-
-                        <TextBlock Text="角色与提示词" FontSize="18" FontWeight="SemiBold" Margin="0,8,0,12" />
+                                    </StackPanel>
+                                </Border>
+                            </ScrollViewer>
+                        </TabItem>
+                        <TabItem Header="角色设定">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,8,10,0">
+                                <Border Style="{StaticResource SectionCard}">
+                                    <StackPanel>
+                        <TextBlock Text="角色与提示词" FontSize="19" FontWeight="SemiBold" Margin="0,0,0,5" />
+                        <TextBlock Text="定义行为边界、表达风格与按关键词触发的世界书内容。" Foreground="#697386" TextWrapping="Wrap" Margin="0,0,0,18" />
                         <TextBlock Text="System Prompt：最高优先级行为规则，不进入知识库检索。" Foreground="#697386" />
                         <TextBox Text="{Binding SystemPromptText, UpdateSourceTrigger=PropertyChanged}"
                                  AcceptsReturn="True"
@@ -376,7 +453,16 @@
                                  MinHeight="120"
                                  Margin="0,6,0,12" />
 
-                        <TextBlock Text="游客交互" FontSize="18" FontWeight="SemiBold" Margin="0,8,0,12" />
+                                    </StackPanel>
+                                </Border>
+                            </ScrollViewer>
+                        </TabItem>
+                        <TabItem Header="界面与桌宠">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,8,10,0">
+                                <Border Style="{StaticResource SectionCard}">
+                                    <StackPanel>
+                        <TextBlock Text="游客交互" FontSize="19" FontWeight="SemiBold" Margin="0,0,0,5" />
+                        <TextBlock Text="自定义标题、欢迎语、8 个预设问题以及桌宠资源和状态文案。" Foreground="#697386" TextWrapping="Wrap" Margin="0,0,0,18" />
                         <UniformGrid Columns="2" Rows="12">
                             <TextBlock Text="助手名称" VerticalAlignment="Center" Margin="0,0,12,10" />
                             <TextBox Text="{Binding AssistantName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
@@ -464,14 +550,29 @@
                             <TextBox Text="{Binding PetFrameIntervalMs, UpdateSourceTrigger=PropertyChanged}" Width="100" />
                             <TextBlock Text="保存后立即刷新桌宠显示。" Foreground="#697386" VerticalAlignment="Center" Margin="12,0,0,0" />
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                            <TextBlock Text="修改管理员 PIN" VerticalAlignment="Center" Margin="0,0,12,0" />
-                            <TextBox Text="{Binding NewAdminPin, UpdateSourceTrigger=PropertyChanged}" Width="180" />
-                            <TextBlock Text="默认 PIN 为 123456，首次部署后请立即修改。" Foreground="#C2410C" VerticalAlignment="Center" Margin="12,0,0,0" />
-                        </StackPanel>
-
-                    </StackPanel>
-                </ScrollViewer>
+                                    </StackPanel>
+                                </Border>
+                            </ScrollViewer>
+                        </TabItem>
+                        <TabItem Header="安全">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,8,10,0">
+                                <Border Style="{StaticResource SectionCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="修改管理员 PIN" FontSize="19" FontWeight="SemiBold" Margin="0,0,0,5" />
+                                        <TextBlock Text="默认 PIN 为 123456。首次部署后建议立即修改，新 PIN 至少 6 位。" Foreground="#C2410C" TextWrapping="Wrap" Margin="0,0,0,18" />
+                                        <TextBlock Text="新 PIN" Foreground="#697386" Margin="0,0,0,7" />
+                                        <TextBox Text="{Binding NewAdminPin, UpdateSourceTrigger=PropertyChanged}" Width="280" HorizontalAlignment="Left" />
+                                        <Button Content="保存新 PIN"
+                                                Command="{Binding ChangeAdminPinCommand}"
+                                                Width="140"
+                                                HorizontalAlignment="Left"
+                                                Margin="0,16,0,0" />
+                                    </StackPanel>
+                                </Border>
+                            </ScrollViewer>
+                        </TabItem>
+                    </TabControl>
+                </Grid>
             </TabItem>
 
             <TabItem Header="日志">

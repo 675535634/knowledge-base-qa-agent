@@ -12,11 +12,22 @@ public enum AvatarState
 public sealed class AppSettings
 {
     public const string DefaultAdminPinHash = "8D969EEF6ECAD3C29A3A629280E686CF0C3F5D5A86AFF3CA12020C923ADC6C92";
-    public const string DefaultPetImagePath = "Assets\\Pets\\chibi-default.png";
+    public const string DefaultPetImagePath = "";
     public const string DefaultLogoImagePath = "";
     public const string DefaultAssistantName = "通用知识库智能体";
     public const string DefaultSystemPrompt = "你是一个可用于组织、产品、项目与个人资料的通用知识库智能体。先判断用户输入是否需要查询知识库：寒暄、感谢、唤醒、询问使用方式等日常对话可直接简短回答；涉及文档事实、数据、规则、流程、项目、产品、服务或其他可核验信息时，根据给定知识库上下文和已触发的世界书设定作答。上下文不足时明确说明缺少依据，不猜测、不编造；只有使用知识库上下文时才在末尾列出引用编号。";
     public const string DefaultCharacterPrompt = "你是通用知识库智能体，保持专业、可靠且友好。根据用户配置的知识库和角色设定回答，不假定任何组织或特定行业背景。";
+    public static readonly string[] DefaultQuickQuestions =
+    [
+        "请概括知识库的主要内容。",
+        "有哪些重要信息需要优先了解？",
+        "请列出相关流程或操作步骤。",
+        "有哪些规则、限制或注意事项？",
+        "请整理相关项目、产品或服务清单。",
+        "知识库中有哪些常见问题？",
+        "请比较文档中的不同方案。",
+        "当前问题缺少哪些信息？"
+    ];
 
     public string ChatProviderId { get; set; } = "openai-chat";
     public string EmbeddingProviderId { get; set; } = "local-hash-embedding";
@@ -62,17 +73,7 @@ public sealed class AppSettings
         "你好助手",
         "智能助手"
     ];
-    public List<string> QuickQuestions { get; set; } =
-    [
-        "请概括知识库的主要内容。",
-        "有哪些重要信息需要优先了解？",
-        "请列出相关流程或操作步骤。",
-        "有哪些规则、限制或注意事项？",
-        "请整理相关项目、产品或服务清单。",
-        "知识库中有哪些常见问题？",
-        "请比较文档中的不同方案。",
-        "当前问题缺少哪些信息？"
-    ];
+    public List<string> QuickQuestions { get; set; } = [.. DefaultQuickQuestions];
     public List<ProviderConfig> Providers { get; set; } = ProviderDefaults.Create();
     public List<WorldBookEntry> WorldBookEntries { get; set; } =
     [

@@ -84,6 +84,15 @@ public partial class App
 
         CreateTrayIcon();
         RestartWakeWordService(settings);
+
+        if (e.Args.Any(arg => arg.Equals("--visitor", StringComparison.OrdinalIgnoreCase)))
+        {
+            ShowVisitorPanel(playGreeting: false);
+        }
+        else if (e.Args.Any(arg => arg.Equals("--admin", StringComparison.OrdinalIgnoreCase)))
+        {
+            RequestAdminLogin(_petWindow);
+        }
     }
 
     public void ShowVisitorPanel(bool playGreeting)
