@@ -289,7 +289,7 @@ public sealed class OpenAiCompatibleChatProvider : IChatProvider
 规则：
 1. 寒暄、唤醒、叫助手名字、确认在线、问“你是谁/你能做什么/怎么使用”、感谢、再见、简单操作提示，mode=direct。
 2. direct 回答必须非常短，通常 1 句；唤醒/叫名字只需自然回应在场，例如“在，我在呢。”，不要展开介绍，除非用户追问。
-3. 涉及学校资料、专业、招生、地址、电话、时间、流程、政策、业务办理、窗口、路线、知识库事实，mode=knowledge。
+3. 涉及文档事实、数据、规则、流程、项目、产品、服务、操作指引或其他需要依据的信息，mode=knowledge。
 4. 不确定是否需要事实依据时，mode=knowledge。
 5. mode=knowledge 时 directAnswer 为空，searchQuery 写适合向量检索的中文检索词。
 6. mode=direct 时 searchQuery 为空，directAnswer 要遵守角色设定和系统提示词。

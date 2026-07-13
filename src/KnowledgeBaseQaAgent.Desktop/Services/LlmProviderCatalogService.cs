@@ -31,15 +31,54 @@ public sealed class LlmProviderCatalogService
         Compatible("ppio", "PPIO 派欧云", "https://api.ppinfra.com/v3/openai", ["deepseek/deepseek-r1/community", "deepseek/deepseek-v3/community"]),
         Compatible("openai", "OpenAI", "https://api.openai.com/v1", ["gpt-4o", "gpt-4o-mini", "gpt-4.1-mini", "o3-mini"]),
         Compatible("openrouter", "OpenRouter", "https://openrouter.ai/api/v1", ["openai/gpt-4o", "deepseek/deepseek-chat", "google/gemini-2.0-flash-001"]),
+        Compatible("minimax", "MiniMax 中国", "https://api.minimaxi.com/v1", []),
+        Compatible("minimax-global", "MiniMax Global", "https://api.minimax.io/v1", []),
+        Compatible("groq", "Groq", "https://api.groq.com/openai/v1", []),
+        Compatible("mistral", "Mistral", "https://api.mistral.ai/v1", []),
+        Compatible("together", "Together AI", "https://api.together.xyz/v1", []),
+        Compatible("fireworks", "Fireworks AI", "https://api.fireworks.ai/inference/v1", []),
+        Compatible("perplexity", "Perplexity", "https://api.perplexity.ai", []),
+        Compatible("xai", "xAI / Grok", "https://api.x.ai/v1", []),
+        Compatible("cerebras", "Cerebras", "https://api.cerebras.ai/v1", []),
+        Compatible("sambanova", "SambaNova", "https://api.sambanova.ai/v1", []),
+        Compatible("huggingface", "Hugging Face Router", "https://router.huggingface.co/v1", []),
+        Compatible("modelscope", "ModelScope", "https://api-inference.modelscope.cn/v1", []),
+        Compatible("nvidia", "NVIDIA NIM", "https://integrate.api.nvidia.com/v1", []),
+        Compatible("novita", "Novita AI", "https://api.novita.ai/v3/openai", []),
+        Compatible("hyperbolic", "Hyperbolic", "https://api.hyperbolic.xyz/v1", []),
+        Compatible("hunyuan", "腾讯混元", "https://api.hunyuan.cloud.tencent.com/v1", []),
+        Compatible("tencent-cloud-ti", "腾讯云 TI / LKEAP", "https://api.lkeap.cloud.tencent.com/v1", []),
+        Compatible("baidu-cloud", "百度千帆", "https://qianfan.baidubce.com/v2", []),
+        Compatible("stepfun", "阶跃星辰", "https://api.stepfun.com/v1", []),
+        Compatible("longcat", "美团 LongCat", "https://api.longcat.chat/openai", []),
+        Compatible("mimo", "小米 MiMo", "https://api.xiaomimimo.com/v1", []),
+        Compatible("cohere", "Cohere Compatible", "https://api.cohere.com/compatibility/v1", []),
+        Compatible("upstage", "Upstage Solar", "https://api.upstage.ai/v1/solar", []),
+        Compatible("aihubmix", "AiHubMix", "https://aihubmix.com/v1", []),
+        Compatible("302ai", "302.AI", "https://api.302.ai/v1", []),
+        Compatible("qiniu", "七牛云 AI", "https://api.qnaigc.com/v1", []),
+        Compatible("gitee-ai", "Gitee AI", "https://ai.gitee.com/v1", []),
+        Compatible("zai", "Z.AI", "https://api.z.ai/api/paas/v4", []),
+        Compatible("new-api", "New API / One API", "http://localhost:3000/v1", [], NoAuthOptions()),
+        Compatible("lmstudio", "LM Studio", "http://localhost:1234/v1", [], NoAuthOptions()),
+        Compatible("localai", "LocalAI", "http://localhost:8080/v1", [], NoAuthOptions()),
+        Compatible("xinference", "Xinference", "http://localhost:9997/v1", [], NoAuthOptions()),
+        Compatible("ollama", "Ollama", "http://localhost:11434/v1", [], new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["modelsPath"] = "/api/tags",
+            ["modelsPathMode"] = "origin",
+            ["modelsAuthRequired"] = "false"
+        }),
         Compatible("custom", "自定义 OpenAI-compatible", "", ["deepseek-chat", "glm-4", "moonshot-v1-8k"])
     ];
 
     private readonly ICredentialService _credentialService;
-    private readonly HttpClient _httpClient = new();
+    private readonly HttpClient _httpClient;
 
-    public LlmProviderCatalogService(ICredentialService credentialService)
+    public LlmProviderCatalogService(ICredentialService credentialService, HttpClient? httpClient = null)
     {
         _credentialService = credentialService;
+        _httpClient = httpClient ?? new HttpClient();
     }
 
     public IReadOnlyList<LlmProviderDefinition> Providers => ProviderDefinitions;
@@ -56,11 +95,7 @@ public sealed class LlmProviderCatalogService
         CancellationToken cancellationToken = default)
     {
         var provider = GetProvider(providerCode);
-        var effectiveOptions = new Dictionary<string, string>(provider.DefaultOptions, StringComparer.OrdinalIgnoreCase);
-        foreach (var (key, value) in options)
-        {
-            effectiveOptions[key] = value;
-        }
+        var effectiveOptions = BuildEffectiveOptions(provider, options);
 
         var effectiveBaseUrl = ResolveBaseUrlForProvider(provider.Code, baseUrl);
         if (string.IsNullOrWhiteSpace(effectiveBaseUrl))
@@ -71,7 +106,9 @@ public sealed class LlmProviderCatalogService
         var effectiveApiKey = string.IsNullOrWhiteSpace(apiKey)
             ? _credentialService.ReadSecret(CredentialName(providerCode))
             : apiKey.Trim();
-        if (string.IsNullOrWhiteSpace(effectiveApiKey))
+        var authRequired = !effectiveOptions.GetValueOrDefault("modelsAuthRequired", "true")
+            .Equals("false", StringComparison.OrdinalIgnoreCase);
+        if (authRequired && string.IsNullOrWhiteSpace(effectiveApiKey))
         {
             throw new InvalidOperationException("请先填写 API Key。");
         }
@@ -82,9 +119,21 @@ public sealed class LlmProviderCatalogService
         }
 
         var method = effectiveOptions.GetValueOrDefault("modelsMethod", "GET").ToUpperInvariant();
-        var url = JoinEndpoint(effectiveBaseUrl, effectiveOptions.GetValueOrDefault("modelsPath", "/v1/models"));
+        var url = BuildModelsEndpoint(effectiveBaseUrl, effectiveOptions);
+        if (!string.IsNullOrWhiteSpace(effectiveApiKey) &&
+            effectiveOptions.TryGetValue("apiKeyQuery", out var apiKeyQuery) &&
+            !string.IsNullOrWhiteSpace(apiKeyQuery))
+        {
+            url = AppendQueryParameter(url, apiKeyQuery, effectiveApiKey);
+        }
+
         using var request = new HttpRequestMessage(method == "POST" ? HttpMethod.Post : HttpMethod.Get, url);
-        AddAuthHeaders(request, effectiveApiKey, effectiveOptions);
+        if (!string.IsNullOrWhiteSpace(effectiveApiKey) && string.IsNullOrWhiteSpace(effectiveOptions.GetValueOrDefault("apiKeyQuery", "")))
+        {
+            AddAuthHeaders(request, effectiveApiKey, effectiveOptions);
+        }
+
+        AddConfiguredHeaders(request, effectiveOptions);
         if (method == "POST")
         {
             var body = effectiveOptions.GetValueOrDefault("modelsBody", "");
@@ -93,14 +142,38 @@ public sealed class LlmProviderCatalogService
                 : new StringContent(body, Encoding.UTF8, "application/json");
         }
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
             throw new ProviderHttpException("models/list", provider.Code, provider.Name, url, response.StatusCode, responseBody);
         }
 
-        return ExtractModels(responseBody);
+        return ParseModelsResponse(responseBody, effectiveOptions);
+    }
+
+    public static Dictionary<string, string> BuildEffectiveOptions(
+        LlmProviderDefinition provider,
+        IReadOnlyDictionary<string, string> configuredOptions)
+    {
+        var effective = new Dictionary<string, string>(provider.DefaultOptions, StringComparer.OrdinalIgnoreCase);
+        var configuredProvider = configuredOptions.GetValueOrDefault("llmProviderCode", "");
+        var mayReuseProviderOptions = provider.Code.Equals("custom", StringComparison.OrdinalIgnoreCase) ||
+            configuredProvider.Equals(provider.Code, StringComparison.OrdinalIgnoreCase);
+        if (!mayReuseProviderOptions)
+        {
+            return effective;
+        }
+
+        foreach (var (key, value) in configuredOptions)
+        {
+            if (!IsProviderStateKey(key))
+            {
+                effective[key] = value;
+            }
+        }
+
+        return effective;
     }
 
     public static ProviderConfig ApplyProviderToChatConfig(
@@ -108,25 +181,45 @@ public sealed class LlmProviderCatalogService
         string providerCode,
         string baseUrl,
         string model,
-        IReadOnlyList<string> dynamicModels)
+        IReadOnlyList<string> dynamicModels,
+        bool replaceDynamicModels = true)
     {
+        var previousProviderCode = config.Options.GetValueOrDefault("llmProviderCode", "");
+        if (!string.IsNullOrWhiteSpace(previousProviderCode))
+        {
+            config.Options[ProviderBaseUrlKey(previousProviderCode)] = config.Options.GetValueOrDefault("baseUrl", "");
+            config.Options[ProviderSelectedModelKey(previousProviderCode)] = config.Model;
+        }
+
         var provider = ProviderDefinitions.FirstOrDefault(item => item.Code.Equals(providerCode, StringComparison.OrdinalIgnoreCase))
             ?? ProviderDefinitions.First(item => item.Code == "custom");
+        var effectiveBaseUrl = ResolveBaseUrlForProvider(
+            provider.Code,
+            string.IsNullOrWhiteSpace(baseUrl) ? config.Options.GetValueOrDefault(ProviderBaseUrlKey(provider.Code), "") : baseUrl);
         config.ProviderId = "openai-chat";
         config.DisplayName = $"{provider.Name} Chat";
         config.Model = model;
         config.AuthRef = $"llm-{providerCode}";
         config.Options["llmProviderCode"] = providerCode;
-        config.Options["baseUrl"] = ResolveBaseUrlForProvider(provider.Code, baseUrl);
+        config.Options["baseUrl"] = effectiveBaseUrl;
+        config.Options[ProviderBaseUrlKey(provider.Code)] = effectiveBaseUrl;
+        config.Options[ProviderSelectedModelKey(provider.Code)] = model;
         foreach (var (key, value) in provider.DefaultOptions)
         {
-            config.Options.TryAdd(key, value);
+            if (provider.Code.Equals("custom", StringComparison.OrdinalIgnoreCase))
+            {
+                config.Options.TryAdd(key, value);
+            }
+            else
+            {
+                config.Options[key] = value;
+            }
         }
 
         config.Endpoint = JoinEndpoint(config.Options["baseUrl"], config.Options.GetValueOrDefault("chatPath", "/v1/chat/completions"));
-        if (dynamicModels.Count > 0)
+        if (replaceDynamicModels)
         {
-            config.Options["dynamicModels"] = string.Join("\n", dynamicModels.Distinct(StringComparer.OrdinalIgnoreCase));
+            ReplaceCachedModels(config, provider.Code, dynamicModels);
         }
 
         return config;
@@ -159,13 +252,17 @@ public sealed class LlmProviderCatalogService
     public static IReadOnlyList<string> GetCachedModels(ProviderConfig config, LlmProviderDefinition provider)
     {
         var models = new List<string>();
-        models.AddRange(provider.RecommendModels);
-        if (config.Options.TryGetValue("dynamicModels", out var dynamicModels))
+        var hasLiveCache = config.Options.GetValueOrDefault(DynamicModelsFetchedKey(provider.Code), "false")
+            .Equals("true", StringComparison.OrdinalIgnoreCase);
+        if (!hasLiveCache)
         {
-            models.AddRange(dynamicModels.Split(["\n", "\r\n", ",", "，"], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+            models.AddRange(provider.RecommendModels);
         }
 
-        if (!string.IsNullOrWhiteSpace(config.Model))
+        models.AddRange(GetDiscoveredModels(config, provider.Code));
+
+        var configuredProvider = config.Options.GetValueOrDefault("llmProviderCode", "");
+        if (!hasLiveCache && configuredProvider.Equals(provider.Code, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(config.Model))
         {
             models.Add(config.Model);
         }
@@ -176,8 +273,74 @@ public sealed class LlmProviderCatalogService
             .ToArray();
     }
 
-    private static LlmProviderDefinition Compatible(string code, string name, string baseUrl, IReadOnlyList<string> models) =>
-        new(code, name, baseUrl, models, new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    public static IReadOnlyList<string> GetDiscoveredModels(ProviderConfig config, string providerCode)
+    {
+        var key = DynamicModelsKey(providerCode);
+        var serialized = config.Options.GetValueOrDefault(key, "");
+        if (string.IsNullOrWhiteSpace(serialized) &&
+            config.Options.GetValueOrDefault("dynamicModelsProviderCode", "").Equals(providerCode, StringComparison.OrdinalIgnoreCase))
+        {
+            serialized = config.Options.GetValueOrDefault("dynamicModels", "");
+        }
+
+        return SplitModels(serialized);
+    }
+
+    public static string GetSavedBaseUrl(ProviderConfig config, LlmProviderDefinition provider)
+    {
+        var saved = config.Options.GetValueOrDefault(ProviderBaseUrlKey(provider.Code), "");
+        if (string.IsNullOrWhiteSpace(saved) &&
+            config.Options.GetValueOrDefault("llmProviderCode", "").Equals(provider.Code, StringComparison.OrdinalIgnoreCase))
+        {
+            saved = config.Options.GetValueOrDefault("baseUrl", "");
+        }
+
+        return ResolveBaseUrlForProvider(provider.Code, saved);
+    }
+
+    public static string GetSavedSelectedModel(ProviderConfig config, LlmProviderDefinition provider)
+    {
+        var saved = config.Options.GetValueOrDefault(ProviderSelectedModelKey(provider.Code), "");
+        if (!string.IsNullOrWhiteSpace(saved))
+        {
+            return saved;
+        }
+
+        return config.Options.GetValueOrDefault("llmProviderCode", "").Equals(provider.Code, StringComparison.OrdinalIgnoreCase)
+            ? config.Model
+            : provider.RecommendModels.FirstOrDefault() ?? "";
+    }
+
+    public static void ReplaceCachedModels(ProviderConfig config, string providerCode, IReadOnlyList<string> models)
+    {
+        var serialized = string.Join("\n", models
+            .Where(item => !string.IsNullOrWhiteSpace(item))
+            .Select(item => item.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase));
+        config.Options[DynamicModelsKey(providerCode)] = serialized;
+        config.Options[DynamicModelsFetchedKey(providerCode)] = "true";
+        config.Options["dynamicModels"] = serialized;
+        config.Options["dynamicModelsProviderCode"] = providerCode;
+    }
+
+    private static string DynamicModelsKey(string providerCode) => $"dynamicModels:{providerCode.Trim().ToLowerInvariant()}";
+    private static string DynamicModelsFetchedKey(string providerCode) => $"dynamicModelsFetched:{providerCode.Trim().ToLowerInvariant()}";
+    private static string ProviderBaseUrlKey(string providerCode) => $"providerBaseUrl:{providerCode.Trim().ToLowerInvariant()}";
+    private static string ProviderSelectedModelKey(string providerCode) => $"providerSelectedModel:{providerCode.Trim().ToLowerInvariant()}";
+
+    private static IReadOnlyList<string> SplitModels(string serialized) => serialized
+        .Split(["\n", "\r\n", ",", "，"], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+
+    private static LlmProviderDefinition Compatible(
+        string code,
+        string name,
+        string baseUrl,
+        IReadOnlyList<string> models,
+        Dictionary<string, string>? optionOverrides = null)
+    {
+        var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["chatPath"] = "/v1/chat/completions",
             ["chatMethod"] = "POST",
@@ -187,7 +350,22 @@ public sealed class LlmProviderCatalogService
             ["apiKeyHeader"] = "Authorization",
             ["apiKeyPrefix"] = "Bearer ",
             ["enableThinking"] = "false"
-        });
+        };
+        if (optionOverrides is not null)
+        {
+            foreach (var (key, value) in optionOverrides)
+            {
+                options[key] = value;
+            }
+        }
+
+        return new(code, name, baseUrl, models, options);
+    }
+
+    private static Dictionary<string, string> NoAuthOptions() => new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["modelsAuthRequired"] = "false"
+    };
 
     private static bool IsKnownDifferentProviderDefaultBaseUrl(string providerCode, string baseUrl)
     {
@@ -254,6 +432,61 @@ public sealed class LlmProviderCatalogService
         }
     }
 
+    private static void AddConfiguredHeaders(HttpRequestMessage request, IReadOnlyDictionary<string, string> options)
+    {
+        if (!options.TryGetValue("modelsHeadersJson", out var headersJson) || string.IsNullOrWhiteSpace(headersJson))
+        {
+            return;
+        }
+
+        using var document = JsonDocument.Parse(headersJson);
+        if (document.RootElement.ValueKind != JsonValueKind.Object)
+        {
+            throw new InvalidOperationException("modelsHeadersJson 必须是 JSON 对象。");
+        }
+
+        foreach (var property in document.RootElement.EnumerateObject())
+        {
+            if (property.Value.ValueKind == JsonValueKind.String)
+            {
+                request.Headers.TryAddWithoutValidation(property.Name, property.Value.GetString());
+            }
+        }
+    }
+
+    private static string BuildModelsEndpoint(string baseUrl, IReadOnlyDictionary<string, string> options)
+    {
+        var path = options.GetValueOrDefault("modelsPath", "/v1/models");
+        if (Uri.TryCreate(path, UriKind.Absolute, out _))
+        {
+            return path;
+        }
+
+        if (options.GetValueOrDefault("modelsPathMode", "base").Equals("origin", StringComparison.OrdinalIgnoreCase) &&
+            Uri.TryCreate(baseUrl, UriKind.Absolute, out var baseUri))
+        {
+            return new Uri(new Uri(baseUri.GetLeftPart(UriPartial.Authority)), path.TrimStart('/')).ToString();
+        }
+
+        return JoinEndpoint(baseUrl, path);
+    }
+
+    private static string AppendQueryParameter(string url, string name, string value)
+    {
+        var separator = url.Contains('?', StringComparison.Ordinal) ? "&" : "?";
+        return $"{url}{separator}{Uri.EscapeDataString(name)}={Uri.EscapeDataString(value)}";
+    }
+
+    private static bool IsProviderStateKey(string key) =>
+        key.Equals("baseUrl", StringComparison.OrdinalIgnoreCase) ||
+        key.Equals("dynamicModels", StringComparison.OrdinalIgnoreCase) ||
+        key.Equals("dynamicModelsProviderCode", StringComparison.OrdinalIgnoreCase) ||
+        key.StartsWith("dynamicModels:", StringComparison.OrdinalIgnoreCase) ||
+        key.StartsWith("dynamicModelsFetched:", StringComparison.OrdinalIgnoreCase) ||
+        key.StartsWith("providerBaseUrl:", StringComparison.OrdinalIgnoreCase) ||
+        key.StartsWith("providerSelectedModel:", StringComparison.OrdinalIgnoreCase) ||
+        key.Equals("llmProviderCode", StringComparison.OrdinalIgnoreCase);
+
     private static string JoinEndpoint(string baseUrl, string path)
     {
         var left = (baseUrl ?? "").Trim().TrimEnd('/');
@@ -287,25 +520,32 @@ public sealed class LlmProviderCatalogService
         return normalizedPath;
     }
 
-    private static IReadOnlyList<string> ExtractModels(string responseBody)
+    public static IReadOnlyList<string> ParseModelsResponse(
+        string responseBody,
+        IReadOnlyDictionary<string, string>? options = null)
     {
         using var document = JsonDocument.Parse(responseBody);
         var result = new List<string>();
-        AddModels(document.RootElement, result);
+        AddModels(document.RootElement, result, options);
+        var stripPrefix = options?.GetValueOrDefault("modelsStripPrefix", "") ?? "";
         return result
             .Where(model => !string.IsNullOrWhiteSpace(model))
-            .Select(model => model.Trim())
+            .Select(model => StripPrefix(model.Trim(), stripPrefix))
+            .Where(model => !string.IsNullOrWhiteSpace(model))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
     }
 
-    private static void AddModels(JsonElement element, List<string> result)
+    private static void AddModels(
+        JsonElement element,
+        List<string> result,
+        IReadOnlyDictionary<string, string>? options)
     {
         if (element.ValueKind == JsonValueKind.Array)
         {
             foreach (var item in element.EnumerateArray())
             {
-                AddModel(item, result);
+                AddModel(item, result, options);
             }
 
             return;
@@ -316,16 +556,19 @@ public sealed class LlmProviderCatalogService
             return;
         }
 
-        foreach (var key in new[] { "data", "models", "items" })
+        foreach (var key in new[] { "data", "models", "items", "results" })
         {
             if (element.TryGetProperty(key, out var array) && array.ValueKind == JsonValueKind.Array)
             {
-                AddModels(array, result);
+                AddModels(array, result, options);
             }
         }
     }
 
-    private static void AddModel(JsonElement item, List<string> result)
+    private static void AddModel(
+        JsonElement item,
+        List<string> result,
+        IReadOnlyDictionary<string, string>? options)
     {
         if (item.ValueKind == JsonValueKind.String)
         {
@@ -338,7 +581,12 @@ public sealed class LlmProviderCatalogService
             return;
         }
 
-        foreach (var key in new[] { "id", "model", "model_id", "name" })
+        if (!IsAvailableModel(item) || !SupportsRequiredCapability(item, options))
+        {
+            return;
+        }
+
+        foreach (var key in new[] { "id", "model", "model_id", "name", "baseModelId" })
         {
             if (item.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.String)
             {
@@ -347,4 +595,49 @@ public sealed class LlmProviderCatalogService
             }
         }
     }
+
+    private static bool IsAvailableModel(JsonElement item)
+    {
+        foreach (var key in new[] { "archived", "deleted", "disabled" })
+        {
+            if (item.TryGetProperty(key, out var flag) && flag.ValueKind == JsonValueKind.True)
+            {
+                return false;
+            }
+        }
+
+        if (item.TryGetProperty("available", out var available) && available.ValueKind == JsonValueKind.False)
+        {
+            return false;
+        }
+
+        if (item.TryGetProperty("status", out var status) && status.ValueKind == JsonValueKind.String)
+        {
+            return status.GetString()?.ToLowerInvariant() is not ("archived" or "deleted" or "disabled" or "unavailable" or "failed");
+        }
+
+        return true;
+    }
+
+    private static bool SupportsRequiredCapability(
+        JsonElement item,
+        IReadOnlyDictionary<string, string>? options)
+    {
+        var required = options?.GetValueOrDefault("modelsRequiredCapability", "") ?? "";
+        if (string.IsNullOrWhiteSpace(required) ||
+            !item.TryGetProperty("supportedGenerationMethods", out var methods) ||
+            methods.ValueKind != JsonValueKind.Array)
+        {
+            return true;
+        }
+
+        return methods.EnumerateArray().Any(method =>
+            method.ValueKind == JsonValueKind.String &&
+            required.Equals(method.GetString(), StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string StripPrefix(string value, string prefix) =>
+        !string.IsNullOrWhiteSpace(prefix) && value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+            ? value[prefix.Length..]
+            : value;
 }

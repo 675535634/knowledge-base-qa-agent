@@ -187,6 +187,52 @@ public sealed class CoreBehaviorTests
     }
 
     [Fact]
+    public void LlmProviderCatalogParsesLiveAndLocalModelResponses()
+    {
+        var liveModels = LlmProviderCatalogService.ParseModelsResponse(
+            """{"data":[{"id":"live-model"},{"id":"removed-model","archived":true},{"id":"disabled-model","available":false}]}""");
+        var ollamaModels = LlmProviderCatalogService.ParseModelsResponse(
+            """{"models":[{"name":"qwen2.5:latest"},{"model":"gemma3:4b"}]}""");
+
+        Assert.Equal(["live-model"], liveModels);
+        Assert.Equal(["qwen2.5:latest", "gemma3:4b"], ollamaModels);
+    }
+
+    [Fact]
+    public void LlmProviderCatalogKeepsModelCachesIsolatedAndClearsEmptyResults()
+    {
+        var config = new ProviderConfig { ProviderId = "openai-chat" };
+        LlmProviderCatalogService.ApplyProviderToChatConfig(config, "deepseek", "", "deepseek-chat", ["deepseek-chat"]);
+        LlmProviderCatalogService.ApplyProviderToChatConfig(config, "openai", "", "gpt-4o-mini", ["gpt-4o-mini"]);
+
+        Assert.Equal(["deepseek-chat"], LlmProviderCatalogService.GetDiscoveredModels(config, "deepseek"));
+        Assert.Equal(["gpt-4o-mini"], LlmProviderCatalogService.GetDiscoveredModels(config, "openai"));
+
+        LlmProviderCatalogService.ReplaceCachedModels(config, "openai", []);
+        Assert.Empty(LlmProviderCatalogService.GetDiscoveredModels(config, "openai"));
+        Assert.Empty(LlmProviderCatalogService.GetCachedModels(config, new LlmProviderCatalogService(new InMemoryCredentialService()).GetProvider("openai")));
+        Assert.Equal(["deepseek-chat"], LlmProviderCatalogService.GetDiscoveredModels(config, "deepseek"));
+    }
+
+    [Fact]
+    public void LlmProviderCatalogDoesNotLeakTransportOptionsAcrossProviders()
+    {
+        var catalog = new LlmProviderCatalogService(new InMemoryCredentialService());
+        var aliyun = catalog.GetProvider("aliyun");
+        var effective = LlmProviderCatalogService.BuildEffectiveOptions(aliyun, new Dictionary<string, string>
+        {
+            ["llmProviderCode"] = "deepseek",
+            ["modelsPath"] = "/wrong-provider-models",
+            ["apiKeyHeader"] = "X-Wrong-Key"
+        });
+
+        Assert.Equal("/v1/models", effective["modelsPath"]);
+        Assert.Equal("Authorization", effective["apiKeyHeader"]);
+        Assert.True(catalog.Providers.Count >= 40);
+        Assert.Equal("false", catalog.GetProvider("ollama").DefaultOptions["modelsAuthRequired"]);
+    }
+
+    [Fact]
     public void ThinkingSwitchOnlyAppliesToSupportedModels()
     {
         Assert.True(OpenAiCompatibleChatProvider.ModelSupportsThinkingSwitch("qwen3.7-plus"));
@@ -199,10 +245,10 @@ public sealed class CoreBehaviorTests
     [Fact]
     public void BroadInventoryQuestionsExpandRetrievalLimit()
     {
-        Assert.Equal(5, RagQueryClassifier.ResolveRetrievalLimit("学校地址在哪里？", 5));
-        Assert.Equal(24, RagQueryClassifier.ResolveRetrievalLimit("学校所有专业有哪些？", 5));
-        Assert.True(RagQueryClassifier.IsBroadInventoryQuestion("请列出全部专业清单"));
-        Assert.False(RagQueryClassifier.IsBroadInventoryQuestion("美容专业学什么？"));
+        Assert.Equal(5, RagQueryClassifier.ResolveRetrievalLimit("产品入口在哪里？", 5));
+        Assert.Equal(24, RagQueryClassifier.ResolveRetrievalLimit("全部服务项目有哪些？", 5));
+        Assert.True(RagQueryClassifier.IsBroadInventoryQuestion("请列出全部服务项目清单"));
+        Assert.False(RagQueryClassifier.IsBroadInventoryQuestion("某个服务如何使用？"));
     }
 
     [Fact]

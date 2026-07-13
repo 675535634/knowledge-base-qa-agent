@@ -100,7 +100,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private bool ttsOptimizeInstructions;
 
     [ObservableProperty]
-    private string ttsPreviewText = "您好，请问有什么需要了解的？我可以为您介绍学校专业、招生政策和校园服务。";
+    private string ttsPreviewText = "您好，我可以根据已导入的知识库为您提供信息和操作指引。";
 
     [ObservableProperty]
     private string secretStorageDescription = "";
@@ -653,7 +653,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         _settings.PetImagePath = PetImagePath.Trim();
         _settings.PetFramesDirectory = PetFramesDirectory.Trim();
         _settings.PetFrameIntervalMs = Math.Max(120, PetFrameIntervalMs);
-        _settings.LogoImagePath = Required(LogoImagePath, AppSettings.DefaultLogoImagePath);
+        _settings.LogoImagePath = LogoImagePath.Trim();
         PetPreviewImagePath = ResolvePetPreviewImagePath(_settings);
         LogoPreviewImagePath = ResolveLogoPreviewImagePath(_settings);
         _settings.WakeWords = WakeWordsText
@@ -711,21 +711,17 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             var chatConfig = _providers.GetConfig("openai-chat");
             var effectiveBaseUrl = LlmProviderCatalogService.ResolveBaseUrlForProvider(provider.Code, LlmBaseUrl);
             LlmBaseUrl = effectiveBaseUrl;
-            var options = new Dictionary<string, string>(provider.DefaultOptions, StringComparer.OrdinalIgnoreCase);
-            foreach (var (key, value) in chatConfig.Options)
-            {
-                options[key] = value;
-            }
-
+            var previousModel = LlmSelectedModel;
             var models = await _llmProviderCatalog.FetchModelsAsync(
                 provider.Code,
                 effectiveBaseUrl,
                 ReadableApiKeyInput(LlmApiKeyToSave),
-                options,
+                chatConfig.Options,
                 _disposeCts.Token);
-            RefreshLlmModelOptions(provider, chatConfig, models);
-            RefreshRuntimeCapabilityModelOptions(models);
-            LlmSelectedModel = models.FirstOrDefault() ?? LlmSelectedModel;
+            LlmSelectedModel = models.Contains(previousModel, StringComparer.OrdinalIgnoreCase)
+                ? previousModel
+                : models.FirstOrDefault() ?? previousModel;
+            RefreshLlmModelOptions(provider, chatConfig, models, useLiveResult: true);
             LlmProviderCatalogService.ApplyProviderToChatConfig(
                 chatConfig,
                 provider.Code,
@@ -734,7 +730,11 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
                 models);
             chatConfig.Options["enableThinking"] = LlmEnableThinking ? "true" : "false";
             await _settingsService.SaveAsync(_settings, _disposeCts.Token);
-            LlmModelStatus = models.Count == 0 ? "供应商未返回模型列表，可手动填写模型名" : $"已获取 {models.Count} 个模型，已同步到 Embedding/ASR/TTS 下拉";
+            var switched = models.Count > 0 && !string.IsNullOrWhiteSpace(previousModel) &&
+                !previousModel.Equals(LlmSelectedModel, StringComparison.OrdinalIgnoreCase);
+            LlmModelStatus = models.Count == 0
+                ? "供应商接口返回 0 个模型，旧缓存已清空；仍可手动填写模型名。"
+                : $"已从 {provider.Name} 实时获取 {models.Count} 个可用模型，下架模型已移除{(switched ? $"，当前模型已切换为 {LlmSelectedModel}" : "")}。";
         }
         catch (Exception ex)
         {
@@ -956,11 +956,8 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         try
         {
             LlmSelectedProviderCode = provider.Code;
-            var configuredBaseUrl = chatConfig.Options.GetValueOrDefault("baseUrl", ExtractBaseUrl(chatConfig.Endpoint, provider.DefaultBaseUrl));
-            LlmBaseUrl = LlmProviderCatalogService.ResolveBaseUrlForProvider(provider.Code, configuredBaseUrl);
-            LlmSelectedModel = string.IsNullOrWhiteSpace(chatConfig.Model)
-                ? provider.RecommendModels.FirstOrDefault() ?? ""
-                : chatConfig.Model;
+            LlmBaseUrl = LlmProviderCatalogService.GetSavedBaseUrl(chatConfig, provider);
+            LlmSelectedModel = LlmProviderCatalogService.GetSavedSelectedModel(chatConfig, provider);
             LlmEnableThinking = bool.TryParse(chatConfig.Options.GetValueOrDefault("enableThinking", "false"), out var enableThinking) && enableThinking;
             LlmApiKeyToSave = _credentialService.ReadSecret(LlmProviderCatalogService.CredentialName(provider.Code)) is null
                 ? ""
@@ -978,10 +975,11 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private void RefreshLlmModelOptions(
         LlmProviderDefinition provider,
         ProviderConfig chatConfig,
-        IReadOnlyList<string> fetchedModels)
+        IReadOnlyList<string> fetchedModels,
+        bool useLiveResult = false)
     {
         LlmModelOptions.Clear();
-        var models = fetchedModels.Count > 0
+        var models = useLiveResult
             ? fetchedModels
             : LlmProviderCatalogService.GetCachedModels(chatConfig, provider);
         foreach (var model in models.Where(model => !string.IsNullOrWhiteSpace(model)).Distinct(StringComparer.OrdinalIgnoreCase))
@@ -989,7 +987,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             LlmModelOptions.Add(model);
         }
 
-        if (!string.IsNullOrWhiteSpace(LlmSelectedModel) && !LlmModelOptions.Contains(LlmSelectedModel))
+        if (!useLiveResult && !string.IsNullOrWhiteSpace(LlmSelectedModel) && !LlmModelOptions.Contains(LlmSelectedModel))
         {
             LlmModelOptions.Insert(0, LlmSelectedModel);
         }
@@ -1026,11 +1024,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         TtsInstructions = ttsConfig.Options.GetValueOrDefault("instructions", "");
         TtsOptimizeInstructions = bool.TryParse(ttsConfig.Options.GetValueOrDefault("optimize_instructions", "false"), out var optimize) && optimize;
         TtsConfigHint = GetTtsConfigHint();
-        var chatConfig = _providers.GetConfig("openai-chat");
-        string[] cachedModels = chatConfig.Options.TryGetValue("dynamicModels", out var dynamicModels)
-            ? dynamicModels.Split(["\n", "\r\n", ",", "，"], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            : [];
-        RefreshRuntimeCapabilityModelOptions(cachedModels);
+        RefreshRuntimeCapabilityModelOptions([]);
         EmbeddingModel = nextEmbeddingModel;
         AsrModel = nextAsrModel;
         TtsModel = nextTtsModel;
@@ -1491,10 +1485,6 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         var chatConfig = _providers.GetConfig("openai-chat");
         var effectiveBaseUrl = LlmProviderCatalogService.ResolveBaseUrlForProvider(provider.Code, LlmBaseUrl);
         LlmBaseUrl = effectiveBaseUrl;
-        foreach (var (key, value) in provider.DefaultOptions)
-        {
-            chatConfig.Options[key] = value;
-        }
         chatConfig.Options["enableThinking"] = LlmEnableThinking ? "true" : "false";
 
         LlmProviderCatalogService.ApplyProviderToChatConfig(
@@ -1502,7 +1492,8 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             provider.Code,
             Required(effectiveBaseUrl, provider.DefaultBaseUrl),
             Required(LlmSelectedModel, provider.RecommendModels.FirstOrDefault() ?? ""),
-            LlmModelOptions.ToArray());
+            LlmProviderCatalogService.GetDiscoveredModels(chatConfig, provider.Code),
+            replaceDynamicModels: false);
         _settings.ChatProviderId = "openai-chat";
         SelectedChatProviderId = "openai-chat";
 
@@ -1521,15 +1512,14 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
 
         var provider = _llmProviderCatalog.GetProvider(value);
         var chatConfig = _providers.GetConfig("openai-chat");
-        LlmBaseUrl = LlmProviderCatalogService.ResolveBaseUrlForProvider(provider.Code, "");
-        LlmSelectedModel = provider.RecommendModels.FirstOrDefault() ?? "";
+        LlmBaseUrl = LlmProviderCatalogService.GetSavedBaseUrl(chatConfig, provider);
+        LlmSelectedModel = LlmProviderCatalogService.GetSavedSelectedModel(chatConfig, provider);
         LlmEnableThinking = false;
         LlmApiKeyToSave = _credentialService.ReadSecret(LlmProviderCatalogService.CredentialName(provider.Code)) is null
             ? ""
             : MaskedApiKey;
         RefreshLlmModelOptions(provider, chatConfig, []);
-        RefreshRuntimeCapabilityModelOptions([]);
-        LlmModelStatus = $"已切换到 {provider.Name}，请填写 API Key 并保存。";
+        LlmModelStatus = $"已切换到 {provider.Name}；点击“实时获取模型”会调用该服务商的模型列表接口。";
     }
 
     partial void OnSelectedSpeechSynthesizerIdChanged(string value)

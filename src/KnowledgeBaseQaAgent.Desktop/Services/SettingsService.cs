@@ -78,7 +78,7 @@ public sealed class SettingsService
 
         if (string.IsNullOrWhiteSpace(settings.GreetingText))
         {
-            settings.GreetingText = "您好，请问有什么需要了解的？可以点击下面的问题，也可以直接语音提问。";
+            settings.GreetingText = "您好，我可以根据已导入的知识库回答问题，也支持文字和语音交互。";
         }
 
         settings.AssistantName = DefaultIfEmptyOrOldDefault(settings.AssistantName, AppSettings.DefaultAssistantName);
@@ -118,10 +118,7 @@ public sealed class SettingsService
             settings.PetImagePath = AppSettings.DefaultPetImagePath;
         }
 
-        if (string.IsNullOrWhiteSpace(settings.LogoImagePath))
-        {
-            settings.LogoImagePath = AppSettings.DefaultLogoImagePath;
-        }
+        settings.LogoImagePath = settings.LogoImagePath?.Trim() ?? "";
 
         settings.SystemPrompt = DefaultIfEmptyOrOldSystemPrompt(settings.SystemPrompt, AppSettings.DefaultSystemPrompt);
         settings.CharacterPrompt = DefaultIfEmpty(settings.CharacterPrompt, AppSettings.DefaultCharacterPrompt);
@@ -155,10 +152,14 @@ public sealed class SettingsService
         {
             settings.QuickQuestions.AddRange(
             [
-                "这里可以办理什么业务？",
-                "开放时间是什么？",
-                "我应该去哪个窗口？",
-                "附近有什么服务设施？"
+                "请概括知识库的主要内容。",
+                "有哪些重要信息需要优先了解？",
+                "请列出相关流程或操作步骤。",
+                "有哪些规则、限制或注意事项？",
+                "请整理相关项目、产品或服务清单。",
+                "知识库中有哪些常见问题？",
+                "请比较文档中的不同方案。",
+                "当前问题缺少哪些信息？"
             ]);
         }
 

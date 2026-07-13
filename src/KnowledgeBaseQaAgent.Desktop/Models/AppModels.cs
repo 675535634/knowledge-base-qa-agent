@@ -13,10 +13,10 @@ public sealed class AppSettings
 {
     public const string DefaultAdminPinHash = "8D969EEF6ECAD3C29A3A629280E686CF0C3F5D5A86AFF3CA12020C923ADC6C92";
     public const string DefaultPetImagePath = "Assets\\Pets\\chibi-default.png";
-    public const string DefaultLogoImagePath = "Assets\\Brand\\logo.png";
-    public const string DefaultAssistantName = "南宁商贸智能问答助手";
-    public const string DefaultSystemPrompt = "你是一个面向触屏现场服务的知识库问答助手。先判断用户输入是否真的需要查询知识库：寒暄、唤醒、叫助手名字、问你是谁、问怎么使用、感谢、再见、确认是否在线等，不查询知识库，直接用一两句短答；如果用户只是叫你或唤醒你，回答要极短，例如表达“我在”。涉及学校资料、专业、招生、地址、电话、时间、流程、政策、业务办理、窗口、路线等事实问题，才根据给定知识库上下文和已触发的世界书设定作答。知识库上下文不足时明确说明缺少依据，不编造。回答要简洁、礼貌，适合现场游客理解；只有使用了知识库上下文时才在末尾列出引用编号。";
-    public const string DefaultCharacterPrompt = "你是南宁商贸智能问答助手，面向路过的游客和办事群众。你的语气专业、可靠、亲切，不编造政策、地点、时间或流程。";
+    public const string DefaultLogoImagePath = "";
+    public const string DefaultAssistantName = "通用知识库智能体";
+    public const string DefaultSystemPrompt = "你是一个可用于组织、产品、项目与个人资料的通用知识库智能体。先判断用户输入是否需要查询知识库：寒暄、感谢、唤醒、询问使用方式等日常对话可直接简短回答；涉及文档事实、数据、规则、流程、项目、产品、服务或其他可核验信息时，根据给定知识库上下文和已触发的世界书设定作答。上下文不足时明确说明缺少依据，不猜测、不编造；只有使用知识库上下文时才在末尾列出引用编号。";
+    public const string DefaultCharacterPrompt = "你是通用知识库智能体，保持专业、可靠且友好。根据用户配置的知识库和角色设定回答，不假定任何组织或特定行业背景。";
 
     public string ChatProviderId { get; set; } = "openai-chat";
     public string EmbeddingProviderId { get; set; } = "local-hash-embedding";
@@ -26,7 +26,7 @@ public sealed class AppSettings
     public string AssistantName { get; set; } = DefaultAssistantName;
     public string VisitorWindowTitle { get; set; } = DefaultAssistantName;
     public string VisitorHeadline { get; set; } = $"您好，我是{DefaultAssistantName}";
-    public string GreetingText { get; set; } = "您好，请问有什么需要了解的？可以点击下面的问题，也可以直接语音提问。";
+    public string GreetingText { get; set; } = "您好，我可以根据已导入的知识库回答问题，也支持文字和语音交互。";
     public string WakeHintText { get; set; } = "可点击桌宠，或说“助手”唤醒。";
     public string PetHintText { get; set; } = "点我咨询";
     public string AdminButtonText { get; set; } = "管理员";
@@ -64,19 +64,23 @@ public sealed class AppSettings
     ];
     public List<string> QuickQuestions { get; set; } =
     [
-        "这里可以办理什么业务？",
-        "开放时间是什么？",
-        "我应该去哪个窗口？",
-        "附近有什么服务设施？"
+        "请概括知识库的主要内容。",
+        "有哪些重要信息需要优先了解？",
+        "请列出相关流程或操作步骤。",
+        "有哪些规则、限制或注意事项？",
+        "请整理相关项目、产品或服务清单。",
+        "知识库中有哪些常见问题？",
+        "请比较文档中的不同方案。",
+        "当前问题缺少哪些信息？"
     ];
     public List<ProviderConfig> Providers { get; set; } = ProviderDefaults.Create();
     public List<WorldBookEntry> WorldBookEntries { get; set; } =
     [
         new()
         {
-            Name = "现场导览",
-            Keywords = ["位置", "路线", "哪里", "怎么走", "窗口"],
-            Content = "当用户询问位置、路线、窗口或现场导览时，优先根据知识库回答；如果知识库没有明确位置，不要臆测，提示咨询现场工作人员。"
+            Name = "事实核验",
+            Keywords = ["依据", "来源", "文档", "规则", "流程"],
+            Content = "回答可核验的事实、规则或流程时优先依据知识库；如果知识库没有明确内容，不要臆测，并说明还需要哪些资料。"
         }
     ];
 }

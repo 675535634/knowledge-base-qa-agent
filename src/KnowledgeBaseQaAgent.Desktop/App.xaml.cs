@@ -220,10 +220,7 @@ public partial class App
 
     private static Drawing.Icon LoadTrayIcon()
     {
-        var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Brand", "logo.ico");
-        return File.Exists(iconPath)
-            ? new Drawing.Icon(iconPath)
-            : Drawing.SystemIcons.Application;
+        return Drawing.SystemIcons.Application;
     }
 
     private void RestartWakeWordService(Models.AppSettings settings)

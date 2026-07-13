@@ -16,6 +16,9 @@ artifacts/
 *.wav
 *.mp3
 *.mp4
+src/KnowledgeBaseQaAgent.Desktop/Assets/Brand/
+UserAssets/
+*.ico
 
 # .NET and Visual Studio user state
 .vs/

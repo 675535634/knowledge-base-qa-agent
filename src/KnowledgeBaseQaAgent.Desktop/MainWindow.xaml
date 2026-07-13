@@ -71,7 +71,10 @@
             <StackPanel DockPanel.Dock="Left">
                 <StackPanel Orientation="Horizontal">
                     <Border Width="48" Height="48" CornerRadius="16" Background="#FFFFFF" BorderBrush="#DDE5F5" BorderThickness="1" Margin="0,0,12,0" ClipToBounds="True">
-                        <Image Source="{Binding LogoPreviewImagePath}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
+                        <Grid>
+                            <TextBlock Text="AI" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="#7267FF" />
+                            <Image Source="{Binding LogoPreviewImagePath}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
+                        </Grid>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="{Binding AssistantName}" FontSize="24" FontWeight="SemiBold" Foreground="#1D2433" TextWrapping="Wrap" />
@@ -187,6 +190,8 @@
                                       SelectedValue="{Binding LlmSelectedProviderCode, UpdateSourceTrigger=PropertyChanged}"
                                       SelectedValuePath="Code"
                                       DisplayMemberPath="Name"
+                                      IsTextSearchEnabled="True"
+                                      MaxDropDownHeight="420"
                                       Margin="0,0,14,10" />
                             <TextBlock Grid.Row="0" Grid.Column="2" Text="模型" VerticalAlignment="Center" Margin="0,0,12,10" />
                             <ComboBox Grid.Row="0"
@@ -207,7 +212,10 @@
                                      Text="{Binding LlmApiKeyToSave, UpdateSourceTrigger=PropertyChanged}"
                                      Margin="0,0,14,0" />
                             <StackPanel Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" Orientation="Horizontal">
-                                <Button Content="获取模型" Command="{Binding RefreshLlmModelsCommand}" MinWidth="96" />
+                                <Button Content="实时获取模型"
+                                        Command="{Binding RefreshLlmModelsCommand}"
+                                        ToolTip="调用当前服务商的模型列表接口，并移除接口中已不存在的模型"
+                                        MinWidth="112" />
                                 <Button Content="保存供应商" Command="{Binding SaveLlmProviderCommand}" MinWidth="110" />
                                 <TextBlock Text="{Binding LlmModelStatus}" Foreground="#697386" VerticalAlignment="Center" Margin="8,0,0,0" TextWrapping="Wrap" MaxWidth="360" />
                             </StackPanel>
@@ -372,7 +380,7 @@
                         <UniformGrid Columns="2" Rows="12">
                             <TextBlock Text="助手名称" VerticalAlignment="Center" Margin="0,0,12,10" />
                             <TextBox Text="{Binding AssistantName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
-                            <TextBlock Text="软件 Logo 路径" VerticalAlignment="Center" Margin="0,0,12,10" />
+                            <TextBlock Text="用户 Logo 路径（默认不提供）" VerticalAlignment="Center" Margin="0,0,12,10" />
                             <TextBox Text="{Binding LogoImagePath, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
                             <TextBlock Text="游客窗口标题" VerticalAlignment="Center" Margin="0,0,12,10" />
                             <TextBox Text="{Binding VisitorWindowTitle, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />

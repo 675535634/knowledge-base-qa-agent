@@ -142,7 +142,10 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <Border Width="52" Height="52" CornerRadius="18" Background="#FFFFFF" BorderBrush="#E2E7FF" BorderThickness="1" Margin="0,0,14,0" ClipToBounds="True">
-                            <Image Source="{Binding LogoPreviewImagePath}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
+                            <Grid>
+                                <TextBlock Text="AI" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="#7267FF" />
+                                <Image Source="{Binding LogoPreviewImagePath}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
+                            </Grid>
                         </Border>
                         <StackPanel Grid.Column="1">
                             <TextBlock Text="{Binding VisitorHeadline}" FontSize="23" FontWeight="SemiBold" Foreground="{StaticResource Ink}" TextWrapping="Wrap" />
