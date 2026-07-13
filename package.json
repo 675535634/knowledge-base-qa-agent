@@ -1,0 +1,50 @@
+{
+  "name": "knowledge-base-qa-electron",
+  "version": "2.1.0",
+  "description": "Electron rewrite of the offline-first knowledge base kiosk assistant",
+  "author": "Knowledge Base QA Agent contributors",
+  "main": "out/main/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "npm run typecheck && electron-vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "test": "vitest run",
+    "preview": "electron-vite preview",
+    "package": "npm run build && electron-builder --win portable",
+    "prepare:runtime": "node scripts/prepare-runtime.mjs",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "4.2.0",
+    "better-sqlite3": "12.11.1",
+    "mammoth": "1.10.0",
+    "marked": "16.2.1",
+    "pdfjs-dist": "5.4.149",
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
+  },
+  "devDependencies": {
+    "@electron-toolkit/preload": "3.0.2",
+    "@types/better-sqlite3": "7.6.13",
+    "@types/node": "24.10.13",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "5.1.4",
+    "electron": "43.1.0",
+    "electron-builder": "26.15.3",
+    "electron-vite": "5.0.0",
+    "typescript": "5.9.3",
+    "vite": "7.3.6",
+    "vitest": "4.0.18"
+  },
+  "build": {
+    "appId": "cn.nanning.kbqa",
+    "productName": "知识库智能助手",
+    "compression": "normal",
+    "asarUnpack": ["resources/runtime/**", "node_modules/better-sqlite3/**"],
+    "files": ["out/**", "package.json"],
+    "extraResources": [{"from": "resources", "to": "resources"}, {"from": "portable.flag", "to": "portable.flag"}],
+    "win": {"target": "portable", "icon": "resources/brand/logo.ico"}
+  }
+}

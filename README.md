@@ -1,58 +1,47 @@
-# Knowledge Base QA Agent
+# 知识库智能助手 · Electron 重构版
 
-一个面向 Windows 展厅、前台和触摸屏场景的知识库问答小程序。它把文档检索、语音输入输出和一个常驻桌面的小助手放在一起：访客点一下就能问，管理员按 `Ctrl+1` 进入配置。
+这是原 WPF 项目的完全 Electron/TypeScript 重构。工程内没有 C# 源码，也不依赖 .NET 运行时。
 
-项目现在还是 WPF/.NET 9 桌面应用，重点放在离线可跑、部署简单和对 OpenAI-compatible 服务的兼容上。
+## 已实现
 
-## 能做什么
+- React 管理端、访客端、透明桌宠窗口、系统托盘及全局快捷键
+- 8 个可编辑预设问题，自定义标题、Logo、问候语、桌宠序列帧与台词
+- 管理端密码保护，默认密码为 `123456`，登录后可修改
+- 70 个模型服务商配置项；OpenAI 兼容、Anthropic、Gemini 协议可直接调用
+- 本地 Embedding、ASR 和单一 VITS TTS 兜底；Embedding 与 ASR 也可切换远程服务
+- SQLite 知识库、文件导入、RAG 检索与 AES-GCM API 密钥存储
 
-- 导入 PDF、Word、文本和网页内容，建立本地 SQLite 知识库
-- 通过向量检索把上下文交给大模型回答，并保留引用来源
-- 支持常见 OpenAI-compatible 聊天、Embedding、ASR 和 TTS 服务
-- 可选 Windows TTS、本地 sherpa-onnx/VITS/Kokoro，或云端语音服务
-- 透明桌面宠物、触摸问答窗口和语音唤醒入口
-- 普通安装版使用 Windows Credential Manager；便携版保存加密后的配置
-
-## 开发环境
-
-- Windows 10/11
-- .NET SDK 9
-- 可选：WiX Toolset（构建 MSI 时需要）
+## 本地开发
 
 ```powershell
-dotnet build KnowledgeBaseQaAgent.sln
-dotnet test KnowledgeBaseQaAgent.sln
+npm install
+npm run dev
 ```
 
-发布自包含的 x64 版本：
+仓库是纯源码分支，不包含私有 Logo、桌宠帧、PDF/知识库文档、模型、运行时 DLL 或 EXE。首次执行 Embedding / ASR 时，Transformers.js 会把 ONNX 模型下载至本地模型缓存；下载完成后可离线运行。Embedding 模型不可用时会自动切换到 384 维本地 Hash 检索。
+
+本地开发时可自行放置 `resources/brand/`、`resources/pet/` 和 `src/renderer/public/`，这些目录及常见图片、文档、音视频格式已被 Git 忽略，不会误提交个人资产。
+
+如需本地 TTS，请从现有 portable 的 `Tools/VITS` 导入当前唯一使用的 `sherpa-onnx-vits-zh-ll`：
 
 ```powershell
-dotnet publish src\KnowledgeBaseQaAgent.Desktop\KnowledgeBaseQaAgent.Desktop.csproj `
-  -c Release -r win-x64 --self-contained true
+npm run prepare:runtime -- "C:\path\to\Tools\VITS"
 ```
 
-构建 MSI：
+不传路径时，脚本会尝试读取本项目维护环境中的旧 portable 目录。导入的 `resources/runtime/tts/` 已被 Git 忽略，不会提交模型或二进制文件。
+
+## 构建
 
 ```powershell
-dotnet build installer\KnowledgeBaseQaAgent.Installer\KnowledgeBaseQaAgent.Installer.wixproj -c Release
+npm run build
+npm run package
 ```
 
-## 关于本地语音模型
+数据默认保存在 Electron userData 目录；便携包存在 `portable.flag` 或使用 `--portable` 时保存到相邻的 `Data` 目录。SQLite 表结构与旧版知识库兼容。
 
-模型、运行时下载和构建产物都不在仓库里。它们体积大、更新快，也各自带有独立的许可条件。需要本地语音时，请自行下载兼容的 sherpa-onnx/VITS/Kokoro 模型，并在管理端把可执行文件和模型路径填进去。
+## 架构
 
-同样地，`Data` 目录、密钥、SQLite 知识库和便携版配置只属于本机，不应提交。
-
-## 目录
-
-```text
-src/        WPF 应用
-tests/      单元测试
-installer/  WiX MSI 安装工程
-scripts/    发布脚本
-tools/      语音接入试验脚本
-```
-
-## 协议
-
-本项目以 [MIT License](LICENSE) 发布。
+- `src/main`：Electron 主进程、SQLite、RAG、LLM、本地模型与 VITS
+- `src/preload`：最小化、类型安全的 IPC 桥
+- `src/renderer`：React 访客端、管理端与透明桌宠窗口
+- `resources`：品牌、CC0 桌宠帧及本地运行时
